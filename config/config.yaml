@@ -1,0 +1,2 @@
+max_iterations: 5
+llm_model: 'gemini-pro'
