@@ -1,0 +1,12 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore environment variables
+.env
+
+# Ignore joblib files
+*.joblib
+
+# Ignore virtual environments
+venv/

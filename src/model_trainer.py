@@ -1,61 +1,46 @@
+import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import joblib
 
 class ModelTrainer:
-    def __init__(self):
-        """
-        Initialize the ModelTrainer class.
-        """
-        pass
+    def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):
+        self.model = model
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_test = X_test
+        self.y_test = y_test
 
-    def train_model(self, model, X_train, y_train):
+    def train_model(self):
         """
-        Train the given model on the training data.
-
-        Args:
-            model (object): The model to be trained.
-            X_train (numpy array): The training features.
-            y_train (numpy array): The training labels.
-
-        Returns:
-            object: The trained model.
+        Train the model on the provided training data.
         """
-        model.fit(X_train, y_train)
-        return model
+        if self.model is None:
+            raise ValueError("No model provided for training.")
+        self.model.fit(self.X_train, self.y_train)
 
-    def evaluate_model(self, model, X_test, y_test):
+    def evaluate_model(self):
         """
-        Evaluate the given model on the test data and return classification metrics.
-
-        Args:
-            model (object): The trained model to be evaluated.
-            X_test (numpy array): The test features.
-            y_test (numpy array): The test labels.
-
-        Returns:
-            dict: A dictionary containing accuracy, precision, recall, and F1 score.
+        Evaluate the trained model on test data and return performance metrics.
         """
-        y_pred = model.predict(X_test)
+        if self.model is None:
+            raise ValueError("Model has not been trained.")
+        predictions = self.model.predict(self.X_test)
         metrics = {
-            'accuracy': accuracy_score(y_test, y_pred),
-            'precision': precision_score(y_test, y_pred, average='weighted'),
-            'recall': recall_score(y_test, y_pred, average='weighted'),
-            'f1_score': f1_score(y_test, y_pred, average='weighted')
+            "accuracy": accuracy_score(self.y_test, predictions),
+            "precision": precision_score(self.y_test, predictions, average='weighted'),
+            "recall": recall_score(self.y_test, predictions, average='weighted'),
+            "f1_score": f1_score(self.y_test, predictions, average='weighted')
         }
         return metrics
 
-    def save_model(self, model, filepath):
+    def save_model(self, filepath):
         """
         Save the trained model to a joblib file.
-
-        Args:
-            model (object): The trained model to save.
-            filepath (str): The path to save the model.
-
-        Returns:
-            None
         """
-        joblib.dump(model, filepath)
-        print(f"Model saved to {filepath}")
+        joblib.dump(self.model, filepath)
 
-
+    def load_model(self, filepath):
+        """
+        Load a trained model from a joblib file.
+        """
+        self.model = joblib.load(filepath)
