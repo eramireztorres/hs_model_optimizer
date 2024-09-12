@@ -50,14 +50,45 @@ class LLMImprover:
         self.model_history.append(history_entry)
         logging.info(f"Logged model history: {history_entry}")
 
+    # def _format_prompt(self, current_model_code, metrics):
+    #     """
+    #     Formats the prompt to provide to the LLM with the model code and performance metrics.
+
+    #     Args:
+    #         current_model_code: The Python code of the current model.
+    #         metrics: The performance metrics of the current model.
+
+    #     Returns:
+    #         str: The formatted prompt for the LLM.
+    #     """
+    #     history_str = json.dumps(self.model_history, indent=2)
+    #     metrics_str = json.dumps(metrics, indent=2)
+        
+    #     prompt = f"""
+    #     You are given a Python model that implements a machine learning classifier. Here is the current model code:
+
+    #     {current_model_code}
+
+    #     Below are the classification metrics for this model:
+    #     {metrics_str}
+
+    #     Previous model versions and their metrics are as follows:
+    #     {history_str}
+
+    #     Please suggest improvements to the model or its hyperparameters, aiming to improve performance.
+    #     Provide only executable Python code for the new model.
+    #     """
+        
+    #     return prompt
+
     def _format_prompt(self, current_model_code, metrics):
         """
         Formats the prompt to provide to the LLM with the model code and performance metrics.
-
+    
         Args:
             current_model_code: The Python code of the current model.
             metrics: The performance metrics of the current model.
-
+    
         Returns:
             str: The formatted prompt for the LLM.
         """
@@ -65,18 +96,26 @@ class LLMImprover:
         metrics_str = json.dumps(metrics, indent=2)
         
         prompt = f"""
-        You are given a Python model that implements a machine learning classifier. Here is the current model code:
-
+        You are provided with the following Python model that implements a machine learning classifier:
+    
         {current_model_code}
-
-        Below are the classification metrics for this model:
+    
+        Classification metrics for this model are:
         {metrics_str}
-
-        Previous model versions and their metrics are as follows:
+    
+        Previous models and their performance metrics are:
         {history_str}
-
-        Please suggest improvements to the model or its hyperparameters, aiming to improve performance.
-        Provide only executable Python code for the new model.
+    
+        Task:
+        1. Based on the given model and its performance, suggest improvements. You may either:
+           - Change the model to a different classifier.
+           - Adjust the hyperparameters of the current model.
+        2. Focus on improving the model's performance (e.g., accuracy, precision, recall, F1 score).
+        3. Ensure all necessary imports are included within the function.
+        4. Return only executable Python code for the improved model without any comments, explanations, or markdown formatting.
+    
+        Output:
+        - Provide only the improved Python code that can replace the current model.
         """
         
         return prompt

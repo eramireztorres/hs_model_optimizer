@@ -1,22 +1,35 @@
 import joblib
 import logging
+import re
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from model_trainer import ModelTrainer
 from llm_improver import LLMImprover
 from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater
+from gpt import Gpt4AnswerGenerator
 
+api_key = os.getenv('OPENAI_API_KEY')
+generator = Gpt4AnswerGenerator(api_key, model='gpt-4o')
+
+llm_improver =LLMImprover(generator, model_history=None)
+
+
+#%%
 class MainController:
-    def __init__(self, joblib_file_path, llm_model):
+    def __init__(self, joblib_file_path, llm_improver):
         """
         Initialize the MainController.
 
         Args:
             joblib_file_path (str): Path to the joblib file containing the training and test data.
-            llm_model: The LLM model instance to query for model improvements.
+            llm_improver: The LLM model improver to query for model improvements.
         """
         self.joblib_file_path = joblib_file_path
-        self.llm_model = llm_model
+        self.llm_improver = llm_improver
         self.data = self._load_data()
         self.history_manager = ModelHistoryManager()
         self.dynamic_updater = DynamicModelUpdater()
@@ -69,7 +82,11 @@ class MainController:
             self.history_manager.save_model_history(current_model_code, metrics)
 
             # Step 4: Get suggestions from the LLM for improvements
-            improved_code = self.llm_model.get_model_suggestions(current_model_code, metrics)
+            improved_code = self.llm_improver.get_model_suggestions(current_model_code, metrics)
+            
+            improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+            improved_code = re.sub(r'^python\n', '', improved_code).strip()
+            
             if improved_code:
                 # Step 5: Update the dynamic model with the improved code
                 self.dynamic_updater.update_model_code(improved_code)
@@ -90,6 +107,10 @@ class MainController:
             logging.error(f"Failed to read the dynamic model code: {e}")
             return ""
 
+
+if __name__ == "__main__":
+    controller = MainController('/home/erick.ramirez/repo/hs_model_optimizer/classification_data.joblib', llm_improver)
+    controller.run()
 
 # from src.data_handler import DataHandler
 # from src.model_trainer import ModelTrainer
