@@ -44,29 +44,39 @@ Or in windows:
 set OPENAI_API_KEY=your_api_key_here
 ```
 
-## Run the app as CLI with options
+## Run the App as CLI with Options
 
-usage: hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MODEL] [--iterations ITERATIONS]
+You can run the `hs_optimize` command-line interface (CLI) with several options for customizing the optimization process.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --data DATA, -d DATA  A dictionary containing training and test data, with keys such as 'X_train', 'y_train', 'X_test', 'y_test'. These should be NumPy arrays representing the feature and target datasets for
-                        model training and evaluation.
-  --history-file-path HISTORY_FILE_PATH, -hfp HISTORY_FILE_PATH
-                        Path to the joblib file where the model history will be stored. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is
-                        'model_history.joblib'. (default: model_history.joblib)
-  --model MODEL, -m MODEL
-                        The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to 'gpt-4o'. (default: gpt-4o)
-  --iterations ITERATIONS, -i ITERATIONS
-                        The number of iterations to run, where each iteration involves training a model, evaluating its performance, and generating improvements. Default is 5. (default: 5)
+### Usage
+
+hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MODEL] [--iterations ITERATIONS]
 
 
-Example:
+### Optional Arguments
 
-    ```bash
-    hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 4
+- **`-h, --help`**:  
+  Show the help message and exit.
 
-    ```
+- **`--data DATA`, `-d DATA`**:  
+  Path to a `.joblib` file containing training and test data. The file should include a dictionary with keys like `'X_train'`, `'y_train'`, `'X_test'`, and `'y_test'`. These should be NumPy arrays representing the feature and target datasets for model training and evaluation.
+
+- **`--history-file-path HISTORY_FILE_PATH`, `-hfp HISTORY_FILE_PATH`**:  
+  Path to the `.joblib` file where the model history will be saved. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is `'model_history.joblib'`.
+
+- **`--model MODEL`, `-m MODEL`**:  
+  The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'gpt-4o'`.
+
+- **`--iterations ITERATIONS`, `-i ITERATIONS`**:  
+  The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `5`.
+
+### Example
+
+Here’s an example of how to run the app with custom data, model history path, and iterations:
+
+```bash
+hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 4
+```
 
 
 ## License
