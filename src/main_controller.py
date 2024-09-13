@@ -6,10 +6,10 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from model_trainer import ModelTrainer
+from model_trainer import ModelTrainer, RegressionModelTrainer
 from llm_improver import LLMImprover
 from model_history_manager import ModelHistoryManager
-from dynamic_model_updater import DynamicModelUpdater
+from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 from gpt import Gpt4AnswerGenerator
 
 
@@ -17,7 +17,7 @@ from gpt import Gpt4AnswerGenerator
 #%%
 
 class MainController:
-    def __init__(self, joblib_file_path, llm_improver, history_file_path):
+    def __init__(self, joblib_file_path, llm_improver, history_file_path, is_regression_bool=False):
         """
         Initialize the MainController.
 
@@ -30,8 +30,16 @@ class MainController:
         self.llm_improver = llm_improver
         self.data = self._load_data()
         self.history_manager = ModelHistoryManager(history_file_path=history_file_path)
-        self.dynamic_updater = DynamicModelUpdater()
+        # self.dynamic_updater = DynamicModelUpdater()
         self.model_trainer = None
+        
+        # Decide whether to use regression or classification based on target values
+        if is_regression_bool:
+            self.dynamic_updater = DynamicRegressionModelUpdater()
+        else:
+            self.dynamic_updater = DynamicModelUpdater()
+            
+        self.is_regression = is_regression_bool
 
     def _load_data(self):
         """
@@ -75,13 +83,23 @@ class MainController:
                 print(f"Model for iteration {iteration + 1}: {model.__class__.__name__}")
     
                 # Train and evaluate the model
-                self.model_trainer = ModelTrainer(
-                    model=model,
-                    X_train=self.data['X_train'],
-                    y_train=self.data['y_train'],
-                    X_test=self.data['X_test'],
-                    y_test=self.data['y_test']
-                )
+                if self.is_regression:
+                    self.model_trainer = RegressionModelTrainer(
+                        model=model,
+                        X_train=self.data['X_train'],
+                        y_train=self.data['y_train'],
+                        X_test=self.data['X_test'],
+                        y_test=self.data['y_test']
+                    )
+                else:
+                    self.model_trainer = ModelTrainer(
+                        model=model,
+                        X_train=self.data['X_train'],
+                        y_train=self.data['y_train'],
+                        X_test=self.data['X_test'],
+                        y_test=self.data['y_test']
+                    )
+                    
                 self.model_trainer.train_model()
                 metrics = self.model_trainer.evaluate_model()
     
@@ -144,6 +162,31 @@ class MainController:
         except Exception as e:
             logging.error(f"Failed to backup original model: {e}")
             return None
+
+
+import numpy as np
+
+def is_regression(y_train):
+    """
+    Check if the target values suggest a regression problem.
+    Regression typically has continuous target values (e.g., floats).
+    This function checks if all values are exact integers, even if they are of type float.
+    
+    Args:
+        y_train (array-like): The target values from the training set.
+
+    Returns:
+        bool: True if the problem is regression, False if it's classification.
+    """
+    # If the target array contains floats but all values are actually integers
+    if np.issubdtype(y_train.dtype, np.floating):
+        # Check if all float values are actually integers
+        if np.all(np.equal(np.mod(y_train, 1), 0)):
+            return False  # This suggests it's a classification problem with integer-like floats
+
+    # Otherwise, treat it as a regression problem if it's not an integer-like float array
+    return np.issubdtype(y_train.dtype, np.floating) or np.issubdtype(y_train.dtype, np.integer) and not np.all(np.equal(np.mod(y_train, 1), 0))
+
 
 
 

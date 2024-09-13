@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
+dynamic_regression_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_regression_model.py')
 
 #%%
 
@@ -54,4 +55,38 @@ class DynamicModelUpdater:
 
         except Exception as e:
             logging.error(f"Failed to run the dynamic model: {e}")
+            return None
+
+class DynamicRegressionModelUpdater:
+    def __init__(self, dynamic_file_path=dynamic_regression_file_path):
+        self.dynamic_file_path = dynamic_file_path
+        self.dynamic_directory = os.path.dirname(os.path.abspath(self.dynamic_file_path))
+
+    def update_model_code(self, new_model_code):
+        try:
+            with open(self.dynamic_file_path, 'w') as f:
+                f.write(new_model_code)
+            logging.info(f"Updated regression model code in {self.dynamic_file_path}")
+        except Exception as e:
+            logging.error(f"Failed to update the regression model file: {e}")
+
+    def run_dynamic_model(self):
+        try:
+            if self.dynamic_directory not in sys.path:
+                sys.path.append(self.dynamic_directory)
+
+            module_name = os.path.splitext(os.path.basename(self.dynamic_file_path))[0]
+
+            if module_name in sys.modules:
+                del sys.modules[module_name]
+
+            dynamic_module = importlib.import_module(module_name)
+            importlib.reload(dynamic_module)
+
+            model = dynamic_module.load_model()
+            logging.info("Successfully loaded the dynamically updated regression model.")
+            return model
+
+        except Exception as e:
+            logging.error(f"Failed to run the dynamic regression model: {e}")
             return None

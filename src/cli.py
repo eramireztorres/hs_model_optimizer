@@ -1,11 +1,12 @@
+from joblib import load
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 
 from cli_decorator import cli_decorator
-from main_controller import MainController
+from main_controller import MainController, is_regression
 from gpt import Gpt4AnswerGenerator
-from llm_improver import LLMImprover
+from llm_improver import LLMImprover, LLMRegressionImprover
 
 #%%
 api_key = os.getenv('OPENAI_API_KEY')
@@ -38,9 +39,21 @@ Raises:
 """
 
     
+    # generator = Gpt4AnswerGenerator(api_key, model=model)
+    # llm_improver = LLMImprover(generator, model_history=None)
+    # controller = MainController(data, llm_improver, history_file_path)
+    # controller.run(iterations=iterations)
+    
     generator = Gpt4AnswerGenerator(api_key, model=model)
-    llm_improver = LLMImprover(generator, model_history=None)
-    controller = MainController(data, llm_improver, history_file_path)
+    is_regression_bool = is_regression(load(data)['y_train'])
+
+    # Check if the task is regression or classification
+    if is_regression_bool:
+        llm_improver = LLMRegressionImprover(generator)
+    else:
+        llm_improver = LLMImprover(generator)
+    
+    controller = MainController(data, llm_improver, history_file_path, is_regression_bool=is_regression_bool)
     controller.run(iterations=iterations)
 
 

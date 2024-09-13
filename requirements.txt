@@ -1,4 +1,4 @@
 scikit-learn
 xgboost
 joblib
-google-generativeai
+openai
