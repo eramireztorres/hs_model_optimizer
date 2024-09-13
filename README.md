@@ -1,25 +1,32 @@
 # Model Optimizer Project
 
-This project aims to optimize machine learning models by iterating through model training, evaluation, and improvements using an LLM (Large Language Model). The system dynamically improves models and hyperparameters across scikit-learn and XGBoost classifiers.
+This project aims to optimize machine learning models by iterating through model training, evaluation, and improvements using an LLM (Large Language Model). The system dynamically improves models and hyperparameters across scikit-learn and XGBoost models.
 
 ## Features
-- Supports multiple classifiers.
+- Supports multiple models.
 - Utilizes LLM to suggest code and hyperparameter improvements.
 - Dynamically applies improvements using hot-swapping techniques.
 - Saves model history and evaluation metrics.
 
 ## Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
     ```
     git clone https://github.com/eramireztorres/hs_model_optimizer.git
     cd hs_model_optimizer
     ```
+    
+2. **Set up a virtual environment (optional but recommended):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate   # On Windows: venv\Scripts\activate
+    ```
 
-2. Install the package:
-```
-python setup.py install
-```
+3. **Install the required packages:**
+    Run the following command to install dependencies:
+    ```bash
+    pip install .
+    ```
 
 ## Export the API keys of your models
 
