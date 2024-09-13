@@ -77,7 +77,7 @@ hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MO
 Here’s an example of how to run the app with custom data, model history path, and iterations:
 
 ```bash
-hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 10
+hs_optimize -d my_classification_data.joblib -hfp output_model_history.joblib -i 10
 ```
 
 

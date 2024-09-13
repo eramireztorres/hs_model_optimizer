@@ -7,12 +7,16 @@ setup(
     author='Erick Eduardo Ramirez Torres',
     author_email='erickeduardoramireztorres@gmail.com',
     packages=find_packages(),
-    include_package_data=True,
+    include_package_data=True,  # Ensure package data is included
+    package_data={
+        '': ['prompts/*.txt'],  # Include all .txt files in prompts folder
+    },
     install_requires=[
         'scikit-learn',
         'xgboost',
         'joblib',
-        'openai'
+        'openai',
+        'lightgbm',
     ],
     entry_points={
         'console_scripts': [
