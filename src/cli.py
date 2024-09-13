@@ -1,10 +1,13 @@
-from src.cli_decorator import cli_decorator
-from src.main_controller import MainController
-from src.gpt import Gpt4AnswerGenerator
-from src.llm_improver import LLMImprover
-
+import sys
 import os
+sys.path.append(os.path.dirname(__file__))
 
+from cli_decorator import cli_decorator
+from main_controller import MainController
+from gpt import Gpt4AnswerGenerator
+from llm_improver import LLMImprover
+
+#%%
 api_key = os.getenv('OPENAI_API_KEY')
 
 @cli_decorator

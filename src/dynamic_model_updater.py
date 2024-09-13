@@ -2,9 +2,14 @@ import importlib
 import os
 import logging
 import sys
+sys.path.append(os.path.dirname(__file__))
+
+dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
+
+#%%
 
 class DynamicModelUpdater:
-    def __init__(self, dynamic_file_path='dynamic_model.py'):
+    def __init__(self, dynamic_file_path=dynamic_file_path):
         """
         Initialize the DynamicModelUpdater.
 
