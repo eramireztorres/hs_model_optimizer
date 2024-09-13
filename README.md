@@ -47,6 +47,8 @@ setx OPENAI_API_KEY=your_api_key_here
 ## Run the App as CLI with Options
 
 You can run the `hs_optimize` command-line interface (CLI) with several options for customizing the optimization process.
+Make sure the joblib data file contains a python dictionary with the keys 'X_train', 'y_train', 'X_test', and 'y_test'.
+The application uses 'y_train' data to determine if it is a classification or regression problem.
 
 ### Usage
 
@@ -75,7 +77,7 @@ hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MO
 Here’s an example of how to run the app with custom data, model history path, and iterations:
 
 ```bash
-hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 4
+hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 10
 ```
 
 
