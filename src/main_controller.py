@@ -12,19 +12,6 @@ from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater
 from gpt import Gpt4AnswerGenerator
 
-api_key = os.getenv('OPENAI_API_KEY')
-generator = Gpt4AnswerGenerator(api_key, model='gpt-4o')
-
-llm_improver = LLMImprover(generator, model_history=None)
-
-history_file_path = 'skdata_model_history.joblib'
-train_data_file = '/home/erick.ramirez/repo/hs_model_optimizer/classification_data.joblib'
-
-# history_file_path = 'north_data_model_history.joblib'
-# train_data_file = '/home/erick.ramirez/repo/Project-PSI/cli/extracted_features_100_band.joblib'
-
-
-iterations = 5
 
 
 #%%
@@ -158,6 +145,21 @@ class MainController:
 
 
 if __name__ == "__main__":
+    
+    api_key = os.getenv('OPENAI_API_KEY')
+    generator = Gpt4AnswerGenerator(api_key, model='gpt-4o')
+    
+    llm_improver = LLMImprover(generator, model_history=None)
+    
+    history_file_path = 'skdata_model_history.joblib'
+    train_data_file = '/home/erick.ramirez/repo/hs_model_optimizer/classification_data.joblib'
+    
+    # history_file_path = 'north_data_model_history.joblib'
+    # train_data_file = '/home/erick.ramirez/repo/Project-PSI/cli/extracted_features_100_band.joblib'
+    
+    
+    iterations = 5
+    
     controller = MainController(train_data_file, llm_improver, history_file_path)
     controller.run(iterations=iterations)
 

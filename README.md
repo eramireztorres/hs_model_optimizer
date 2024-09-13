@@ -12,24 +12,55 @@ This project aims to optimize machine learning models by iterating through model
 
 1. Clone the repository:
     ```
-    git clone https://github.com/yourusername/my_model_optimizer_project.git
-    cd my_model_optimizer_project
+    git clone https://github.com/eramireztorres/hs_model_optimizer.git
+    cd hs_model_optimizer
     ```
 
-2. Install dependencies:
-    ```
-    pip install -r requirements.txt
+2. Install the package:
+```
+python setup.py install
+```
+
+## Export the API keys of your models
+
+Before using, make sure to export your OpenAI API key as an environment variable. 
+
+Linux or macOS:
+
+```bash
+export OPENAI_API_KEY='your_api_key_here'
+```
+
+Or in windows:
+
+```bash
+set OPENAI_API_KEY=your_api_key_here
+```
+
+## Run the app as CLI with options
+
+usage: hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MODEL] [--iterations ITERATIONS]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --data DATA, -d DATA  A dictionary containing training and test data, with keys such as 'X_train', 'y_train', 'X_test', 'y_test'. These should be NumPy arrays representing the feature and target datasets for
+                        model training and evaluation.
+  --history-file-path HISTORY_FILE_PATH, -hfp HISTORY_FILE_PATH
+                        Path to the joblib file where the model history will be stored. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is
+                        'model_history.joblib'. (default: model_history.joblib)
+  --model MODEL, -m MODEL
+                        The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to 'gpt-4o'. (default: gpt-4o)
+  --iterations ITERATIONS, -i ITERATIONS
+                        The number of iterations to run, where each iteration involves training a model, evaluating its performance, and generating improvements. Default is 5. (default: 5)
+
+
+Example:
+
+    ```bash
+    hs_optimize my_classification_data.joblib -hfp output_model_history.joblib -i 4
+
     ```
 
-3. Run the application:
-    ```
-    python main.py
-    ```
-
-## Project Structure
-- `src/`: Contains core classes and logic.
-- `tests/`: Unit tests for the project.
-- `logs/`: Contains logs for tracking experiments.
 
 ## License
 [MIT](LICENSE)
