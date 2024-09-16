@@ -72,6 +72,10 @@ hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MO
 - **`--iterations ITERATIONS`, `-i ITERATIONS`**:  
   The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `5`.
 
+
+- **`--extra-info EXTRA_INFO, -ei EXTRA_INFO`**:
+   Additional context or information to provide to the LLM for more informed suggestions. Examples include class imbalance, noisy labels, or outlier data. Default is 'Not available'.
+
 ### Example
 
 Here’s an example of how to run the app with custom data, model history path, and iterations:

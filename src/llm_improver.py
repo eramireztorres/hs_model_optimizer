@@ -227,41 +227,34 @@ sys.path.append(os.path.dirname(__file__))
 prompt_file_path = os.path.join(os.path.dirname(__file__), 'prompts/classification_prompt.txt')
 prompt_regression_file_path = os.path.join(os.path.dirname(__file__), 'prompts/regression_prompt.txt')
 
+
 class LLMImprover:
     def __init__(self, llm_model, model_history=None, prompt_file_path=prompt_file_path):
-        """
-        Initialize the LLMImprover.
-
-        Args:
-            llm_model: The LLM model instance to query for suggestions.
-            model_history: A list of dictionaries containing model information and metrics.
-            prompt_file_path: Path to the prompt template file.
-        """
         self.llm_model = llm_model
         self.model_history = model_history if model_history else []
         self.prompt_file_path = prompt_file_path
 
-    def get_model_suggestions(self, current_model_code, metrics):
+    def get_model_suggestions(self, current_model_code, metrics, extra_info="Not available"):
         """
-        Ask the LLM for suggestions on model and hyperparameter improvements.
+        Ask the LLM for suggestions on model improvements with additional information.
 
         Args:
             current_model_code: The Python code of the current model.
             metrics: The performance metrics of the current model.
+            extra_info: Additional information for the LLM prompt (e.g., class imbalance, noisy labels).
 
         Returns:
             str: The improved model code proposed by the LLM.
         """
-        prompt = self._format_prompt(current_model_code, metrics)
+        prompt = self._format_prompt(current_model_code, metrics, extra_info)
 
-        # Query the LLM for improvements
         try:
             improved_code = self.llm_model.get_response(prompt)
             return improved_code
         except Exception as e:
             logging.error(f"Error querying LLM for suggestions: {e}")
             return None
-
+        
     def log_model_history(self, model_code, metrics):
         """
         Log the current model code and its metrics for future reference.
@@ -273,13 +266,14 @@ class LLMImprover:
         self.model_history.append(history_entry)
         logging.info(f"Logged model history: {history_entry}")
 
-    def _format_prompt(self, current_model_code, metrics):
+    def _format_prompt(self, current_model_code, metrics, extra_info):
         """
-        Load the prompt template from a file and format it with current model details.
+        Load the prompt template from a file and format it with the current model details and additional information.
 
         Args:
             current_model_code: The Python code of the current model.
             metrics: The performance metrics of the current model.
+            extra_info: Additional information for the LLM prompt.
 
         Returns:
             str: The formatted prompt.
@@ -291,11 +285,11 @@ class LLMImprover:
             history_str = json.dumps(self.model_history, indent=2)
             metrics_str = json.dumps(metrics, indent=2)
 
-            # Insert the model code, metrics, and history into the prompt
             prompt = prompt_template.format(
                 current_model_code=current_model_code,
                 metrics_str=metrics_str,
-                history_str=history_str
+                history_str=history_str,
+                extra_info=extra_info  # Include extra info in the prompt
             )
             return prompt
         except FileNotFoundError:
@@ -305,30 +299,23 @@ class LLMImprover:
 
 class LLMRegressionImprover:
     def __init__(self, llm_model, model_history=None, prompt_file_path=prompt_regression_file_path):
-        """
-        Initialize the LLMRegressionImprover.
-
-        Args:
-            llm_model: The LLM model instance to query for suggestions.
-            model_history: A list of dictionaries containing model information and metrics.
-            prompt_file_path: Path to the prompt template file.
-        """
         self.llm_model = llm_model
         self.model_history = model_history if model_history else []
         self.prompt_file_path = prompt_file_path
 
-    def get_model_suggestions(self, current_model_code, metrics):
+    def get_model_suggestions(self, current_model_code, metrics, extra_info="Not available"):
         """
-        Ask the LLM for suggestions on regression model improvements.
+        Ask the LLM for suggestions on regression model improvements with additional information.
 
         Args:
-            current_model_code: The Python code of the current model.
-            metrics: The performance metrics of the current model.
+            current_model_code: The Python code of the current regression model.
+            metrics: The performance metrics of the current regression model.
+            extra_info: Additional information for the LLM prompt (e.g., noisy labels, outliers).
 
         Returns:
             str: The improved model code proposed by the LLM.
         """
-        prompt = self._format_prompt(current_model_code, metrics)
+        prompt = self._format_prompt(current_model_code, metrics, extra_info)
 
         try:
             improved_code = self.llm_model.get_response(prompt)
@@ -347,13 +334,15 @@ class LLMRegressionImprover:
         }
         self.model_history.append(history_entry)
 
-    def _format_prompt(self, current_model_code, metrics):
+
+    def _format_prompt(self, current_model_code, metrics, extra_info):
         """
-        Load the prompt template from a file and format it with current regression model details.
+        Load the prompt template from a file and format it with the current regression model details and additional information.
 
         Args:
             current_model_code: The Python code of the current regression model.
             metrics: The performance metrics of the current regression model.
+            extra_info: Additional information for the LLM prompt.
 
         Returns:
             str: The formatted prompt.
@@ -365,13 +354,163 @@ class LLMRegressionImprover:
             history_str = json.dumps(self.model_history, indent=2)
             metrics_str = json.dumps(metrics, indent=2)
 
-            # Insert the model code, metrics, and history into the prompt
             prompt = prompt_template.format(
                 current_model_code=current_model_code,
                 metrics_str=metrics_str,
-                history_str=history_str
+                history_str=history_str,
+                extra_info=extra_info  # Include extra info in the prompt
             )
             return prompt
         except FileNotFoundError:
             logging.error(f"Prompt file not found: {self.prompt_file_path}")
             return None
+
+
+# class LLMImprover:
+#     def __init__(self, llm_model, model_history=None, prompt_file_path=prompt_file_path):
+#         """
+#         Initialize the LLMImprover.
+
+#         Args:
+#             llm_model: The LLM model instance to query for suggestions.
+#             model_history: A list of dictionaries containing model information and metrics.
+#             prompt_file_path: Path to the prompt template file.
+#         """
+#         self.llm_model = llm_model
+#         self.model_history = model_history if model_history else []
+#         self.prompt_file_path = prompt_file_path
+
+#     def get_model_suggestions(self, current_model_code, metrics):
+#         """
+#         Ask the LLM for suggestions on model and hyperparameter improvements.
+
+#         Args:
+#             current_model_code: The Python code of the current model.
+#             metrics: The performance metrics of the current model.
+
+#         Returns:
+#             str: The improved model code proposed by the LLM.
+#         """
+#         prompt = self._format_prompt(current_model_code, metrics)
+
+#         # Query the LLM for improvements
+#         try:
+#             improved_code = self.llm_model.get_response(prompt)
+#             return improved_code
+#         except Exception as e:
+#             logging.error(f"Error querying LLM for suggestions: {e}")
+#             return None
+
+#     def log_model_history(self, model_code, metrics):
+#         """
+#         Log the current model code and its metrics for future reference.
+#         """
+#         history_entry = {
+#             'model_code': model_code,
+#             'metrics': metrics
+#         }
+#         self.model_history.append(history_entry)
+#         logging.info(f"Logged model history: {history_entry}")
+
+#     def _format_prompt(self, current_model_code, metrics):
+#         """
+#         Load the prompt template from a file and format it with current model details.
+
+#         Args:
+#             current_model_code: The Python code of the current model.
+#             metrics: The performance metrics of the current model.
+
+#         Returns:
+#             str: The formatted prompt.
+#         """
+#         try:
+#             with open(self.prompt_file_path, 'r') as file:
+#                 prompt_template = file.read()
+
+#             history_str = json.dumps(self.model_history, indent=2)
+#             metrics_str = json.dumps(metrics, indent=2)
+
+#             # Insert the model code, metrics, and history into the prompt
+#             prompt = prompt_template.format(
+#                 current_model_code=current_model_code,
+#                 metrics_str=metrics_str,
+#                 history_str=history_str
+#             )
+#             return prompt
+#         except FileNotFoundError:
+#             logging.error(f"Prompt file not found: {self.prompt_file_path}")
+#             return None
+
+
+# class LLMRegressionImprover:
+#     def __init__(self, llm_model, model_history=None, prompt_file_path=prompt_regression_file_path):
+#         """
+#         Initialize the LLMRegressionImprover.
+
+#         Args:
+#             llm_model: The LLM model instance to query for suggestions.
+#             model_history: A list of dictionaries containing model information and metrics.
+#             prompt_file_path: Path to the prompt template file.
+#         """
+#         self.llm_model = llm_model
+#         self.model_history = model_history if model_history else []
+#         self.prompt_file_path = prompt_file_path
+
+#     def get_model_suggestions(self, current_model_code, metrics):
+#         """
+#         Ask the LLM for suggestions on regression model improvements.
+
+#         Args:
+#             current_model_code: The Python code of the current model.
+#             metrics: The performance metrics of the current model.
+
+#         Returns:
+#             str: The improved model code proposed by the LLM.
+#         """
+#         prompt = self._format_prompt(current_model_code, metrics)
+
+#         try:
+#             improved_code = self.llm_model.get_response(prompt)
+#             return improved_code
+#         except Exception as e:
+#             logging.error(f"Error querying LLM for regression suggestions: {e}")
+#             return None
+
+#     def log_model_history(self, model_code, metrics):
+#         """
+#         Log the current model code and its metrics for future reference.
+#         """
+#         history_entry = {
+#             'model_code': model_code,
+#             'metrics': metrics
+#         }
+#         self.model_history.append(history_entry)
+
+#     def _format_prompt(self, current_model_code, metrics):
+#         """
+#         Load the prompt template from a file and format it with current regression model details.
+
+#         Args:
+#             current_model_code: The Python code of the current regression model.
+#             metrics: The performance metrics of the current regression model.
+
+#         Returns:
+#             str: The formatted prompt.
+#         """
+#         try:
+#             with open(self.prompt_file_path, 'r') as file:
+#                 prompt_template = file.read()
+
+#             history_str = json.dumps(self.model_history, indent=2)
+#             metrics_str = json.dumps(metrics, indent=2)
+
+#             # Insert the model code, metrics, and history into the prompt
+#             prompt = prompt_template.format(
+#                 current_model_code=current_model_code,
+#                 metrics_str=metrics_str,
+#                 history_str=history_str
+#             )
+#             return prompt
+#         except FileNotFoundError:
+#             logging.error(f"Prompt file not found: {self.prompt_file_path}")
+#             return None

@@ -17,6 +17,7 @@ setup(
         'joblib',
         'openai',
         'lightgbm',
+        'pytz'
     ],
     entry_points={
         'console_scripts': [
