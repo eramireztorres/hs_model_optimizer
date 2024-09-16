@@ -76,7 +76,7 @@ hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MO
 - **`--extra-info EXTRA_INFO, -ei EXTRA_INFO`**:
    Additional context or information to provide to the LLM for more informed suggestions. Examples include class imbalance, noisy labels, or outlier data. Default is 'Not available'.
 
-### Example
+### Example 1
 
 Here’s an example of how to run the app with custom data, model history path, and iterations:
 
@@ -84,6 +84,15 @@ Here’s an example of how to run the app with custom data, model history path, 
 hs_optimize -d my_classification_data.joblib -hfp output_model_history.joblib -i 10
 ```
 
+### Example 2
+
+Example with Class Imbalance for Classification:
+
+```bash
+hs_optimize -d my_classification_data.joblib -hfp classification_history.joblib -i 10 --extra-info "Binary classification with class imbalance, 4:1 ratio between class 0 and class 1."
+```
+
+In this case, the application will pass the additional information to the LLM, which can then suggest using custom loss functions or class weighting techniques to address the class imbalance.
 
 ## License
 [MIT](LICENSE)
