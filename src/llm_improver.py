@@ -233,7 +233,7 @@ class LLMImprover:
         self.llm_model = llm_model
         self.model_history = model_history if model_history else []
         self.prompt_file_path = prompt_file_path
-
+        
     def get_model_suggestions(self, current_model_code, metrics, extra_info="Not available"):
         """
         Ask the LLM for suggestions on model improvements with additional information.

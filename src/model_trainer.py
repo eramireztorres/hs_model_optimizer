@@ -19,20 +19,72 @@ class ModelTrainer:
             raise ValueError("No model provided for training.")
         self.model.fit(self.X_train, self.y_train)
 
+
     def evaluate_model(self):
         """
         Evaluate the trained model on test data and return performance metrics.
+        Converts any non-JSON serializable types (e.g., NumPy arrays) to native Python types.
         """
         if self.model is None:
             raise ValueError("Model has not been trained.")
+        
+        # Get predictions
         predictions = self.model.predict(self.X_test)
+        
+        # Convert metrics to Python-native types
         metrics = {
-            "accuracy": accuracy_score(self.y_test, predictions),
-            "precision": precision_score(self.y_test, predictions, average='weighted'),
-            "recall": recall_score(self.y_test, predictions, average='weighted'),
-            "f1_score": f1_score(self.y_test, predictions, average='weighted')
+            "accuracy": float(accuracy_score(self.y_test, predictions)),
+            "precision": list(precision_score(self.y_test, predictions, average=None)),
+            "recall": list(recall_score(self.y_test, predictions, average=None)),
+            "f1_score": list(f1_score(self.y_test, predictions, average=None)),
+            "global_metrics": {
+                "accuracy": float(accuracy_score(self.y_test, predictions)),
+                "precision": float(precision_score(self.y_test, predictions, average='weighted')),
+                "recall": float(recall_score(self.y_test, predictions, average='weighted')),
+                "f1_score": float(f1_score(self.y_test, predictions, average='weighted'))
+            }
         }
+
         return metrics
+
+    # def evaluate_model(self):
+    #     """
+    #     Evaluate the trained model on test data and return performance metrics, including per-class metrics.
+    #     """
+    #     if self.model is None:
+    #         raise ValueError("Model has not been trained.")
+        
+    #     # Get predictions
+    #     predictions = self.model.predict(self.X_test)
+    
+    #     # Calculate metrics per class and globally
+    #     metrics = {
+    #         "accuracy": accuracy_score(self.y_test, predictions),
+    #         "precision_per_class": precision_score(self.y_test, predictions, average=None),
+    #         "recall_per_class": recall_score(self.y_test, predictions, average=None),
+    #         "f1_score_per_class": f1_score(self.y_test, predictions, average=None),
+    #         "overall_precision": precision_score(self.y_test, predictions, average='weighted'),
+    #         "overall_recall": recall_score(self.y_test, predictions, average='weighted'),
+    #         "overall_f1_score": f1_score(self.y_test, predictions, average='weighted')
+    #     }
+        
+    #     return metrics
+
+
+    # def evaluate_model(self):
+    #     """
+    #     Evaluate the trained model on test data and return performance metrics.
+    #     """
+    #     if self.model is None:
+    #         raise ValueError("Model has not been trained.")
+    #     predictions = self.model.predict(self.X_test)
+    #     metrics = {
+    #         "accuracy": accuracy_score(self.y_test, predictions),
+    #         "precision": precision_score(self.y_test, predictions, average='weighted'),
+    #         "recall": recall_score(self.y_test, predictions, average='weighted'),
+    #         "f1_score": f1_score(self.y_test, predictions, average='weighted')
+    #     }
+    #     return metrics
 
     def save_model(self, filepath):
         """
