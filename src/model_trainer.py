@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import mean_squared_error, r2_score
+import xgboost as xgb
 import joblib
 
 class ModelTrainer:
@@ -46,45 +47,6 @@ class ModelTrainer:
         }
 
         return metrics
-
-    # def evaluate_model(self):
-    #     """
-    #     Evaluate the trained model on test data and return performance metrics, including per-class metrics.
-    #     """
-    #     if self.model is None:
-    #         raise ValueError("Model has not been trained.")
-        
-    #     # Get predictions
-    #     predictions = self.model.predict(self.X_test)
-    
-    #     # Calculate metrics per class and globally
-    #     metrics = {
-    #         "accuracy": accuracy_score(self.y_test, predictions),
-    #         "precision_per_class": precision_score(self.y_test, predictions, average=None),
-    #         "recall_per_class": recall_score(self.y_test, predictions, average=None),
-    #         "f1_score_per_class": f1_score(self.y_test, predictions, average=None),
-    #         "overall_precision": precision_score(self.y_test, predictions, average='weighted'),
-    #         "overall_recall": recall_score(self.y_test, predictions, average='weighted'),
-    #         "overall_f1_score": f1_score(self.y_test, predictions, average='weighted')
-    #     }
-        
-    #     return metrics
-
-
-    # def evaluate_model(self):
-    #     """
-    #     Evaluate the trained model on test data and return performance metrics.
-    #     """
-    #     if self.model is None:
-    #         raise ValueError("Model has not been trained.")
-    #     predictions = self.model.predict(self.X_test)
-    #     metrics = {
-    #         "accuracy": accuracy_score(self.y_test, predictions),
-    #         "precision": precision_score(self.y_test, predictions, average='weighted'),
-    #         "recall": recall_score(self.y_test, predictions, average='weighted'),
-    #         "f1_score": f1_score(self.y_test, predictions, average='weighted')
-    #     }
-    #     return metrics
 
     def save_model(self, filepath):
         """

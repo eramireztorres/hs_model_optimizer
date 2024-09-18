@@ -179,44 +179,28 @@ Extra Info: There are several outliers in the data affecting the model’s perfo
 
 Suggested Improvement: Use a custom Huber loss function to reduce the sensitivity of the model to outliers, especially in Class 1:
 def load_model():
-    from xgboost import XGBClassifier
     import numpy as np
     import xgboost as xgb
 
     # Define a custom Huber loss function
-    def huber_loss(y_true, y_pred):
-        delta = 1.0  # Change this delta value as needed
+    def custom_huber_loss(y_true, y_pred):
+        delta = 1.0  # Delta parameter for the Huber loss
         residual = y_true - y_pred
         condition = np.abs(residual) <= delta
-        squared_loss = 0.5 * residual**2
-        linear_loss = delta * (np.abs(residual) - 0.5 * delta)
-        return np.where(condition, squared_loss, linear_loss)
-
-    # Define the gradient and hessian for the custom loss function
-    def custom_huber_grad_hess(y_true, y_pred):
-        delta = 1.0  # Change this delta value as needed
-        residual = y_pred - y_true
-        grad = np.where(np.abs(residual) <= delta, residual, delta * np.sign(residual))
-        hess = np.where(np.abs(residual) <= delta, 1.0, 0.0)
+        grad = np.where(condition, residual, delta * np.sign(residual))  # Gradient
+        hess = np.where(condition, 1.0, 0.0)  # Hessian
         return grad, hess
 
-    # Create a custom objective function using the gradient and hessian
-    def custom_huber_loss(y_pred, dtrain):
-        # dtrain is an XGBoost DMatrix object, and y_true must be obtained using get_label()
-        y_true = dtrain.get_label()  
-        grad, hess = custom_huber_grad_hess(y_true, y_pred)
-        return grad, hess
-
-    # Train the model with the custom objective function
     model = xgb.XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, objective=custom_huber_loss)
     return model
-
     
 Explanation:
 
-    Per-Class Metrics: We’ve now included the precision, recall, and F1 score for Class 0 and Class 1 separately. In this case, Class 1 shows significantly lower performance, indicating a need to handle outliers and misclassifications better in that class.
-    Custom Loss Function: The huber_loss function helps to deal with outliers in the data, which is especially useful when one class (in this case, Class 1) suffers from poor recall due to outlier predictions.
-    Objective Function: The custom loss function is directly used as the XGBoost objective parameter, helping to improve robustness against outliers.
+    Per-Class Metrics: We include the precision, recall, and F1 score for Class 0 and Class 1. Class 1 is underperforming, indicating a need for better handling of outliers that may affect this class.
+    Custom Loss Function: The custom_huber_loss function addresses outliers by reducing the impact of large residuals (differences between predicted and true values). This is particularly useful when Class 1 suffers from misclassifications due to these outliers.
+    Objective Function: The custom Huber loss function is used directly as the XGBoost objective. It operates on y_true and y_pred, allowing the model to adjust for outlier sensitivity.
+
+This approach simplifies the integration of the custom loss function into the model, helping to reduce the negative effects of outliers on model performance, especially for the underperforming class..
 
 Please ensure all necessary imports are included within the function.
 Provide only executable Python code for the improved model without any comments, explanations, or markdown formatting.
