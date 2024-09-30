@@ -1,0 +1,211 @@
+You are provided with the following Python model that implements a machine learning classifier:
+
+{current_model_code}
+
+Classification metrics for this model are:
+{metrics_str}
+
+Previous models and their performance metrics are:
+{history_str}
+
+Additional Information:
+{extra_info}
+
+Task:
+Based on the given model and its performance, suggest improvements. You may either:
+    - Change the model to a different classifier (e.g., XGBoost).
+    - Adjust the hyperparameters of the current model, especially if the metrics are already high.
+    - Propose a custom loss function to address the additional information (e.g., class imbalance, noisy labels).
+    - Focus on improving underperforming classes based on their precision, recall, or F1 score.
+    
+**Example 1** (Strong Metrics, Small Hyperparameter Tuning):
+Previous Model:
+def load_model():
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(n_estimators=1200, max_depth=60, min_samples_split=2, min_samples_leaf=1)
+
+Metrics:
+    Global:
+        Accuracy: 0.936
+        Precision: 0.937
+        Recall: 0.936
+        F1 Score: 0.936
+    Per-Class:
+        Precision per class: [0.94, 0.92]
+        Recall per class: [0.93, 0.92]
+        F1 Score per class: [0.935, 0.92]
+
+Extra Info:
+Not available
+
+Suggested Improvement:
+Since the metrics are strong, a small adjustment in hyperparameters:
+def load_model():
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(n_estimators=1500, max_depth=70, min_samples_split=2, min_samples_leaf=1)
+
+**Example 2** (Switch to XGBoost for Improved Performance):
+Previous Model:
+def load_model():
+    from sklearn.ensemble import RandomForestClassifier
+    return RandomForestClassifier(n_estimators=800, max_depth=50, min_samples_split=2, min_samples_leaf=1)
+
+Metrics:
+    Global:
+        Accuracy: 0.92
+        Precision: 0.92
+        Recall: 0.92
+        F1 Score: 0.92
+    Per-Class:
+        Precision per class: [0.95, 0.89]
+        Recall per class: [0.90, 0.94]
+        F1 Score per class: [0.92, 0.91]
+
+Extra Info:
+Not available
+
+Suggested Improvement:
+Switch to a more powerful model like XGBoost for improved performance:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, subsample=0.8)
+
+**Example 3** (Class Imbalance with Underperforming Class):
+Previous Model:
+def load_model():
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(n_estimators=1200, max_depth=60, min_samples_split=2, min_samples_leaf=1)
+
+Metrics:
+    Global:
+        Accuracy: 0.85
+        Precision: 0.80
+        Recall: 0.78
+        F1 Score: 0.79
+    Per-Class:
+        Precision per class: [0.90, 0.60]
+        Recall per class: [0.92, 0.50]
+        F1 Score per class: [0.91, 0.55]
+
+Extra Info:
+Binary classification problem with a class imbalance: there are 4 times more instances of class 0 than class 1.
+
+Suggested Improvement:
+Given the class imbalance, we suggest using XGBoost with a custom `scale_pos_weight` parameter to penalize the majority class (class 0) and better handle the minority class (class 1):
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=1000, max_depth=10, learning_rate=0.1, scale_pos_weight=4)
+
+Explanation:
+The `scale_pos_weight=4` parameter adjusts the model's sensitivity to class 1 by weighting its misclassification more heavily. This will help address the class imbalance and improve recall for the minority class.
+
+**Example 4** (Noisy Labels):
+Previous Model:
+def load_model():
+    from sklearn.ensemble import RandomForestClassifier
+    return RandomForestClassifier(n_estimators=800, max_depth=50, min_samples_split=2, min_samples_leaf=1)
+
+Metrics:
+    Global:
+        Accuracy: 0.92
+        Precision: 0.92
+        Recall: 0.92
+        F1 Score: 0.92
+    Per-Class:
+        Precision per class: [0.90, 0.94]
+        Recall per class: [0.88, 0.96]
+        F1 Score per class: [0.89, 0.95]
+
+Extra Info:
+
+There are doubts about the accuracy of some class labels. It is suspected that up to 15% of the labels might be noisy or incorrect.
+
+Suggested Improvement:
+Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels, and adjust scale_pos_weight to account for class imbalance:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=800, max_depth=10, learning_rate=0.1, gamma=0.5)
+
+Explanation:
+Using `gamma=0.5` in XGBoost increases regularization, making the model more robust to noisy labels. It helps by preventing overfitting to potentially mislabeled instances.
+
+**Example 5** (Class Imbalance and Noisy Labels):
+Previous Model:
+def load_model():
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(n_estimators=1000, max_depth=40)
+
+Metrics:
+    Global:
+        Accuracy: 0.89
+        Precision: 0.88
+        Recall: 0.85
+        F1 Score: 0.86
+    Per-Class:
+        Precision per class: [0.90, 0.75]
+        Recall per class: [0.88, 0.60]
+        F1 Score per class: [0.89, 0.67]
+
+Extra Info:
+Class imbalance is present, with class 0 being 3 times more frequent than class 1. Additionally, there are concerns about the accuracy of some labels.
+
+Suggested Improvement:
+Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels and adjust scale_pos_weight to account for class imbalance:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=500, max_depth=15, learning_rate=0.05, scale_pos_weight=3, eval_metric='auc', gamma=0.5)
+
+Explanation:
+This approach combines class balancing via `scale_pos_weight=3` and robustness to noisy labels via `gamma=0.5`. The model will better handle both issues simultaneously.
+
+**Example 6** (Custom Huber Loss Function for Outliers):
+Previous Model:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05)
+
+Metrics:
+	Global:
+	    Accuracy: 0.89
+	    Precision: 0.88
+	    Recall: 0.85
+	    F1 Score: 0.86
+	Per-Class:
+	    Precision per class: [0.90, 0.75]
+	    Recall per class: [0.88, 0.60]
+	    F1 Score per class: [0.89, 0.67]
+
+Extra Info: There are several outliers in the data affecting the model’s performance, particularly in Class 1. We want to reduce the impact of these outliers and improve the performance of Class 1.
+
+Suggested Improvement: Use a custom Huber loss function to reduce the sensitivity of the model to outliers, especially in Class 1:
+def load_model():
+    import numpy as np
+    import xgboost as xgb
+
+    # Define a custom Huber loss function
+    def custom_huber_loss(y_true, y_pred):
+        delta = 1.0  # Delta parameter for the Huber loss
+        residual = y_true - y_pred
+        condition = np.abs(residual) <= delta
+        grad = np.where(condition, residual, delta * np.sign(residual))  # Gradient
+        hess = np.where(condition, 1.0, 0.0)  # Hessian
+        return grad, hess
+
+    model = xgb.XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, objective=custom_huber_loss)
+    return model
+    
+Explanation:
+
+    Per-Class Metrics: We include the precision, recall, and F1 score for Class 0 and Class 1. Class 1 is underperforming, indicating a need for better handling of outliers that may affect this class.
+    Custom Loss Function: The custom_huber_loss function addresses outliers by reducing the impact of large residuals (differences between predicted and true values). This is particularly useful when Class 1 suffers from misclassifications due to these outliers.
+    Objective Function: The custom Huber loss function is used directly as the XGBoost objective. It operates on y_true and y_pred, allowing the model to adjust for outlier sensitivity.
+
+This approach simplifies the integration of the custom loss function into the model, helping to reduce the negative effects of outliers on model performance, especially for the underperforming class..
+
+Please ensure all necessary imports are included within the function.
+Provide only executable Python code for the improved model without any comments, explanations, or markdown formatting.
+
+Output:
+Provide only the improved Python code that can replace the current model.
+
+

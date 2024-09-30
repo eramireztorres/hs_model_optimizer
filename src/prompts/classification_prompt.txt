@@ -42,7 +42,8 @@ Suggested Improvement:
 Since the metrics are strong, a small adjustment in hyperparameters:
 def load_model():
     from sklearn.ensemble import ExtraTreesClassifier
-    return ExtraTreesClassifier(n_estimators=1500, max_depth=70, min_samples_split=2, min_samples_leaf=1)
+    return ExtraTreesClassifier(n_estimators=1600, max_depth=70, min_samples_split=4, min_samples_leaf=2)
+
 
 **Example 2** (Switch to XGBoost for Improved Performance):
 Previous Model:
@@ -70,6 +71,7 @@ def load_model():
     from xgboost import XGBClassifier
     return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, subsample=0.8)
 
+
 **Example 3** (Class Imbalance with Underperforming Class):
 Previous Model:
 def load_model():
@@ -91,10 +93,10 @@ Extra Info:
 Binary classification problem with a class imbalance: there are 4 times more instances of class 0 than class 1.
 
 Suggested Improvement:
-Given the class imbalance, we suggest using XGBoost with a custom `scale_pos_weight` parameter to penalize the majority class (class 0) and better handle the minority class (class 1):
+Given the class imbalance, we suggest using XGBoost with a custom `scale_pos_weight` parameter to penalize the majority class (class 0) and better handle the minority class (class 1). Further exploration of additional metrics (like AUC) could be included. Adding some regularization can also prevent overfitting due to imbalance.:
 def load_model():
     from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=1000, max_depth=10, learning_rate=0.1, scale_pos_weight=4)
+    return XGBClassifier(n_estimators=1000, max_depth=10, learning_rate=0.1, scale_pos_weight=4, reg_alpha=0.2, eval_metric='auc')
 
 Explanation:
 The `scale_pos_weight=4` parameter adjusts the model's sensitivity to class 1 by weighting its misclassification more heavily. This will help address the class imbalance and improve recall for the minority class.
@@ -121,10 +123,11 @@ Extra Info:
 There are doubts about the accuracy of some class labels. It is suspected that up to 15% of the labels might be noisy or incorrect.
 
 Suggested Improvement:
-Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels, and adjust scale_pos_weight to account for class imbalance:
+Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels, and adjust scale_pos_weight to account for class imbalance. Adding regularization like reg_alpha or reg_lambda can enhance model robustness against noise. Additionally, using subsampling can reduce overfitting.:
 def load_model():
     from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=800, max_depth=10, learning_rate=0.1, gamma=0.5)
+    return XGBClassifier(n_estimators=800, max_depth=10, learning_rate=0.1, gamma=0.5, subsample=0.8, reg_alpha=0.3, reg_lambda=0.3)
+
 
 Explanation:
 Using `gamma=0.5` in XGBoost increases regularization, making the model more robust to noisy labels. It helps by preventing overfitting to potentially mislabeled instances.
@@ -150,10 +153,10 @@ Extra Info:
 Class imbalance is present, with class 0 being 3 times more frequent than class 1. Additionally, there are concerns about the accuracy of some labels.
 
 Suggested Improvement:
-Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels and adjust scale_pos_weight to account for class imbalance:
+Use XGBoost with regularization (via gamma) to reduce the impact of noisy labels and adjust scale_pos_weight to account for class imbalance. Further fine-tuning with reg_lambda (L2 regularization) and subsample can provide better handling of both class imbalance and noisy labels:
 def load_model():
     from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=500, max_depth=15, learning_rate=0.05, scale_pos_weight=3, eval_metric='auc', gamma=0.5)
+    return XGBClassifier(n_estimators=500, max_depth=15, learning_rate=0.05, scale_pos_weight=3, eval_metric='auc', gamma=0.5, reg_lambda=0.2, subsample=0.85)
 
 Explanation:
 This approach combines class balancing via `scale_pos_weight=3` and robustness to noisy labels via `gamma=0.5`. The model will better handle both issues simultaneously.
@@ -177,30 +180,102 @@ Metrics:
 
 Extra Info: There are several outliers in the data affecting the model’s performance, particularly in Class 1. We want to reduce the impact of these outliers and improve the performance of Class 1.
 
-Suggested Improvement: Use a custom Huber loss function to reduce the sensitivity of the model to outliers, especially in Class 1:
+Suggested Improvement: To better handle outliers, use XGBoost’s built-in reg:squaredlogerror loss function, which can naturally reduce the influence of large residuals, providing a more robust solution than a custom Huber loss:
 def load_model():
-    import numpy as np
-    import xgboost as xgb
-
-    # Define a custom Huber loss function
-    def custom_huber_loss(y_true, y_pred):
-        delta = 1.0  # Delta parameter for the Huber loss
-        residual = y_true - y_pred
-        condition = np.abs(residual) <= delta
-        grad = np.where(condition, residual, delta * np.sign(residual))  # Gradient
-        hess = np.where(condition, 1.0, 0.0)  # Hessian
-        return grad, hess
-
-    model = xgb.XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, objective=custom_huber_loss)
-    return model
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=600, max_depth=12, learning_rate=0.03, subsample=0.85, reg_alpha=0.2, objective='reg:squaredlogerror')
     
 Explanation:
 
-    Per-Class Metrics: We include the precision, recall, and F1 score for Class 0 and Class 1. Class 1 is underperforming, indicating a need for better handling of outliers that may affect this class.
-    Custom Loss Function: The custom_huber_loss function addresses outliers by reducing the impact of large residuals (differences between predicted and true values). This is particularly useful when Class 1 suffers from misclassifications due to these outliers.
-    Objective Function: The custom Huber loss function is used directly as the XGBoost objective. It operates on y_true and y_pred, allowing the model to adjust for outlier sensitivity.
+    Per-Class Metrics: Class 1 is underperforming due to outliers. To improve performance, we reduce the sensitivity of the model to these outliers.
+    Loss Function: Instead of a custom Huber loss, we leverage the reg:squaredlogerror objective in XGBoost, which is well-suited to handle outliers by emphasizing smaller residuals and reducing the impact of large ones. This provides a more streamlined solution, eliminating the need for custom loss functions.
+    Tuning: Additional improvements include increasing the number of estimators and adjusting subsample and reg_alpha to control overfitting and further improve performance for the underperforming class.
 
-This approach simplifies the integration of the custom loss function into the model, helping to reduce the negative effects of outliers on model performance, especially for the underperforming class..
+This approach simplifies outlier handling and improves Class 1 performance while maintaining the model’s robustness.
+
+
+** Example 7 ** (Improvement Based on Performance Evolution Across Multiple Models):
+
+Previous Model 1:
+def load_model():
+    from sklearn.linear_model import LogisticRegression
+    return LogisticRegression(C=1.0, max_iter=100)
+
+Metrics for Model 1:
+    Global:
+        Accuracy: 0.82
+        Precision: 0.80
+        Recall: 0.78
+        F1 Score: 0.79
+    Per-Class:
+        Precision per class: [0.85, 0.75]
+        Recall per class: [0.88, 0.68]
+        F1 Score per class: [0.86, 0.71]
+
+Previous Model 2:
+def load_model():
+    from sklearn.ensemble import RandomForestClassifier
+    return RandomForestClassifier(n_estimators=500, max_depth=30, min_samples_split=4, min_samples_leaf=2)
+
+Metrics for Model 2:
+    Global:
+        Accuracy: 0.88
+        Precision: 0.87
+        Recall: 0.85
+        F1 Score: 0.86
+    Per-Class:
+        Precision per class: [0.90, 0.84]
+        Recall per class: [0.92, 0.78]
+        F1 Score per class: [0.91, 0.81]
+
+Previous Model 3:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=400, max_depth=10, learning_rate=0.05, scale_pos_weight=2)
+
+Metrics for Model 3:
+    Global:
+        Accuracy: 0.90
+        Precision: 0.89
+        Recall: 0.88
+        F1 Score: 0.88
+    Per-Class:
+        Precision per class: [0.92, 0.86]
+        Recall per class: [0.93, 0.83]
+        F1 Score per class: [0.92, 0.84]
+
+Extra Info:
+    The target dataset shows a moderate class imbalance (class 1 is twice as frequent as class 0).
+    Performance improvement is needed for the minority class (class 0), as its recall has remained lower compared to the majority class in all three models.
+    The model has consistently improved overall, but there is a diminishing return in precision and recall gains after switching to XGBoost (Model 3).
+
+Suggested Improvement: Considering the history of model performance, particularly the diminishing returns in the minority class performance (Class 0), and given that class imbalance has been an issue, we suggest continuing with XGBoost but applying advanced hyperparameter tuning and early stopping to prevent overfitting while maximizing gains for the minority class:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(
+        n_estimators=600,          # Increase number of estimators
+        max_depth=12,              # Slightly deeper tree to capture more complex patterns
+        learning_rate=0.03,        # Lower learning rate for fine-tuning
+        subsample=0.85,            # Subsample to prevent overfitting
+        colsample_bytree=0.8,      # Reduce tree feature sampling to improve generalization
+        scale_pos_weight=2.5,      # Adjust further for class imbalance
+        gamma=0.3,                 # Introduce regularization to control overfitting
+        eval_metric='auc',         # Use AUC to monitor model performance during training
+        early_stopping_rounds=50   # Stop training if no improvement in AUC after 50 rounds
+    )
+
+Explanation:
+
+    Patterns in Performance: Model 1 (Logistic Regression) showed poor performance, particularly for the minority class (Class 0), which was somewhat improved by Model 2 (Random Forest) due to its ability to capture more complex interactions. However, even Model 2 showed a notable drop in recall for the minority class, indicating a class imbalance issue. The switch to XGBoost in Model 3 provided gains, especially for the majority class (Class 1), but improvements for the minority class are slowing down, suggesting a plateau in performance.
+
+    Class Imbalance Tuning: We adjust the scale_pos_weight parameter slightly to 2.5 to further balance the importance of minority class misclassifications, while fine-tuning other hyperparameters to avoid overfitting and maintain generalization.
+
+    Regularization and Subsampling: Introducing gamma=0.3 and adjusting the subsample and colsample_bytree parameters help prevent overfitting to specific patterns in the majority class, allowing the model to generalize better.
+
+    Learning Rate and Early Stopping: Lowering the learning rate ensures that the model makes smaller, more refined updates, while early stopping is introduced to prevent overfitting when no further gains are seen in the AUC.
+
+By leveraging the history of the previous models and their incremental improvements, this approach seeks to fine-tune XGBoost further while addressing the plateau observed in minority class performance.
+
 
 Please ensure all necessary imports are included within the function.
 Provide only executable Python code for the improved model without any comments, explanations, or markdown formatting.
