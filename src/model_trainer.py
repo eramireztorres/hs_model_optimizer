@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import joblib
+from sklearn.base import is_classifier
 
 class ModelTrainer:
     def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):
@@ -12,13 +14,37 @@ class ModelTrainer:
         self.X_test = X_test
         self.y_test = y_test
 
+    # def train_model(self):
+    #     """
+    #     Train the model on the provided training data.
+    #     """
+    #     if self.model is None:
+    #         raise ValueError("No model provided for training.")
+    #     self.model.fit(self.X_train, self.y_train)
+    
     def train_model(self):
         """
-        Train the model on the provided training data.
+        Train the model on the provided training data, with optional validation data for early stopping if using XGBoost.
         """
         if self.model is None:
             raise ValueError("No model provided for training.")
-        self.model.fit(self.X_train, self.y_train)
+        
+        # Optional: Split data for validation
+        X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
+    
+        # Check if the model is an XGBoost model
+        if isinstance(self.model, xgb.XGBClassifier) or isinstance(self.model, xgb.XGBRegressor):
+            # Train using XGBoost with early stopping
+            # self.model.fit(X_train, y_train, 
+            #                eval_set=[(X_val, y_val)], 
+            #                early_stopping_rounds=10, 
+            #                verbose=True)
+            self.model.fit(X_train, y_train, 
+                           eval_set=[(X_val, y_val)])
+        else:
+            # For other scikit-learn models
+            self.model.fit(X_train, y_train)
+
 
 
     def evaluate_model(self):
@@ -70,13 +96,36 @@ class RegressionModelTrainer:
         self.X_test = X_test
         self.y_test = y_test
 
+    # def train_model(self):
+    #     """
+    #     Train the regression model on the provided training data.
+    #     """
+    #     if self.model is None:
+    #         raise ValueError("No model provided for training.")
+    #     self.model.fit(self.X_train, self.y_train)
+    
     def train_model(self):
         """
-        Train the regression model on the provided training data.
+        Train the model on the provided training data, with optional validation data for early stopping if using XGBoost.
         """
         if self.model is None:
             raise ValueError("No model provided for training.")
-        self.model.fit(self.X_train, self.y_train)
+        
+        # Optional: Split data for validation
+        X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
+    
+        # Check if the model is an XGBoost model
+        if isinstance(self.model, xgb.XGBClassifier) or isinstance(self.model, xgb.XGBRegressor):
+            # Train using XGBoost with early stopping
+            # self.model.fit(X_train, y_train, 
+            #                eval_set=[(X_val, y_val)], 
+            #                early_stopping_rounds=10, 
+            #                verbose=True)
+            self.model.fit(X_train, y_train, 
+                           eval_set=[(X_val, y_val)])
+        else:
+            # For other scikit-learn models
+            self.model.fit(X_train, y_train)
 
     def evaluate_model(self):
         """
