@@ -13,7 +13,7 @@ from model_api_factory import ModelAPIFactory
 @cli_decorator
 def select_model_cli(data,
                      model: str = 'meta-llama/llama-3.1-405b-instruct:free',
-                     model_provider: str = 'llama',
+                     model_provider: str = None,
                      history_file_path: str = 'model_history.joblib',
                      iterations: int = 5,
                      extra_info: str = 'Not available',
