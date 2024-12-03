@@ -30,7 +30,7 @@ This project aims to optimize machine learning models by iterating through model
 
 ## Export the API keys of your models
 
-# OpenAI Models
+### OpenAI Models
 
 For OpenAI models, export your API key as an environment variable:
 
@@ -46,7 +46,7 @@ Or in windows:
 setx OPENAI_API_KEY "your_openai_api_key_here"
 ```
 
-# Llama Models via OpenRouter
+### Llama Models via OpenRouter
 
 To use Llama models with OpenRouter, follow these steps:
 
