@@ -17,7 +17,9 @@ setup(
         'joblib',
         'openai',
         'lightgbm',
-        'pytz'
+        'pytz',
+        'requests',
+        'pandas'
     ],
     entry_points={
         'console_scripts': [

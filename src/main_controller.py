@@ -7,48 +7,85 @@ sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from model_trainer import ModelTrainer, RegressionModelTrainer
-from llm_improver import LLMImprover
+from llm_improver import LLMImprover,LLMRegressionImprover
 from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 from gpt import Gpt4AnswerGenerator
-
+from model_api_factory import ModelAPIFactory
 
 
 #%%
 
+# class MainController:
+#     def __init__(self, joblib_file_path, llm_improver, history_file_path, is_regression_bool=False, 
+#                  extra_info="Not available", output_models_path=None):
+#         """
+#         Initialize the MainController.
+
+#         Args:
+#             joblib_file_path (str): Path to the joblib file containing the training and test data.
+#             llm_improver: The LLM model improver to query for model improvements.
+#             history_file_path: Path to the file where model history will be stored.
+#             is_regression_bool (bool): Whether the task is regression.
+#             extra_info (str): Additional information to include in the LLM prompt (e.g., class imbalance, noisy labels).
+#             output_models_path (str): Directory where the trained models will be saved. If None, models will not be saved.
+#         """
+#         self.joblib_file_path = joblib_file_path
+#         self.llm_improver = llm_improver
+#         self.history_manager = ModelHistoryManager(history_file_path=history_file_path)
+#         self.data = self._load_data()
+#         self.extra_info = extra_info  # Store the additional information
+#         self.model_trainer = None
+#         self.is_regression = is_regression_bool
+#         self.output_models_path = output_models_path  # Path to save models
+
+#         if is_regression_bool:
+#             self.dynamic_updater = DynamicRegressionModelUpdater()
+#         else:
+#             self.dynamic_updater = DynamicModelUpdater()
+            
+        
+#         # Initialize a list to hold all models if saving is required
+#         self.saved_models = [] if output_models_path else None
+
+
 class MainController:
-    def __init__(self, joblib_file_path, llm_improver, history_file_path, is_regression_bool=False, 
+    def __init__(self, joblib_file_path, model_provider, history_file_path, model=None, is_regression_bool=False, 
                  extra_info="Not available", output_models_path=None):
         """
         Initialize the MainController.
 
         Args:
-            joblib_file_path (str): Path to the joblib file containing the training and test data.
-            llm_improver: The LLM model improver to query for model improvements.
+            joblib_file_path (str): Path to the joblib file containing training and test data.
+            model_provider (str): The provider name for the LLM (e.g., "openai", "llama", "gemini").
             history_file_path: Path to the file where model history will be stored.
             is_regression_bool (bool): Whether the task is regression.
             extra_info (str): Additional information to include in the LLM prompt (e.g., class imbalance, noisy labels).
             output_models_path (str): Directory where the trained models will be saved. If None, models will not be saved.
         """
         self.joblib_file_path = joblib_file_path
-        self.llm_improver = llm_improver
         self.history_manager = ModelHistoryManager(history_file_path=history_file_path)
         self.data = self._load_data()
-        self.extra_info = extra_info  # Store the additional information
+        self.extra_info = extra_info
         self.model_trainer = None
         self.is_regression = is_regression_bool
-        self.output_models_path = output_models_path  # Path to save models
+        self.output_models_path = output_models_path
 
-        if is_regression_bool:
-            self.dynamic_updater = DynamicRegressionModelUpdater()
-        else:
-            self.dynamic_updater = DynamicModelUpdater()
-            
-        
-        # Initialize a list to hold all models if saving is required
-        self.saved_models = [] if output_models_path else None
+        # Dynamically initialize the LLM model
+        self.llm_improver = self._initialize_llm_improver(model_provider, model)
 
-            
+        # Choose appropriate dynamic updater
+        self.dynamic_updater = DynamicRegressionModelUpdater() if is_regression_bool else DynamicModelUpdater()
+
+    def _initialize_llm_improver(self, model_provider, model):
+        """
+        Initialize the LLM improver dynamically based on the provider.
+        """
+        llm_model = ModelAPIFactory.get_model_api(provider=model_provider, model=model)
+        if self.is_regression:
+            return LLMRegressionImprover(llm_model)
+        return LLMImprover(llm_model)
+          
     def _load_data(self):
         """
         Load the training and test data from the joblib file.
@@ -118,8 +155,16 @@ class MainController:
                 improved_code = self.llm_improver.get_model_suggestions(current_model_code, metrics, extra_info=self.extra_info)
 
                 # Clean up the returned code
-                improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
-                improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+                # improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                
+                if improved_code:
+                    improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+                    improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                else:
+                    logging.warning("Improved code is None. Skipping update.")
+                    improved_code = ""
+
 
                 if improved_code:
                     print(f"Improved model code for iteration {iteration + 1} received from LLM.")
