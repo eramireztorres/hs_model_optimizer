@@ -61,16 +61,6 @@ To use Llama models with OpenRouter, follow these steps:
      ```bash
      setx OPENROUTER_API_KEY "your_openrouter_api_key_here"
      ```
-4. Verify the environment variable:
-   - On Linux or macOS:
-     ```bash
-     echo $OPENROUTER_API_KEY
-     ```
-   - On Windows:
-     ```bash
-     echo %OPENROUTER_API_KEY%
-     ```
-
 
 ## Run the App as CLI with Options
 
