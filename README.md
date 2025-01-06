@@ -46,9 +46,9 @@ Or in windows:
 setx OPENAI_API_KEY "your_openai_api_key_here"
 ```
 
-### Llama Models via OpenRouter
+### Other Models via OpenRouter
 
-To use Llama models with OpenRouter, follow these steps:
+To use Llama, Gemini or models with OpenRouter, follow these steps:
 
 1. Visit [OpenRouter](https://openrouter.ai/) and log in or create an account.
 2. Navigate to the API keys section in your account dashboard and generate a new API key.
