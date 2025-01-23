@@ -12,14 +12,15 @@ setup(
         '': ['prompts/*.txt'],  # Include all .txt files in prompts folder
     },
     install_requires=[
-        'scikit-learn',
-        'xgboost',
-        'joblib',
-        'openai',
-        'lightgbm',
-        'pytz',
-        'requests',
-        'pandas'
+        'scikit-learn==1.5.2',  # Ensure compatibility with your codebase
+        'xgboost==2.1.1',
+        'joblib==1.4.2',
+        'openai==1.45.0',
+        'lightgbm==4.5.0',
+        'pytz==2024.2',
+        'requests==2.32.3',
+        'pandas==2.2.3',
+        'httpx==0.27.2'
     ],
     entry_points={
         'console_scripts': [
