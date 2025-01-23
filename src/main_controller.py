@@ -12,6 +12,9 @@ from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 from gpt import Gpt4AnswerGenerator
 from model_api_factory import ModelAPIFactory
+from data_loader import DataLoader  # Import the new DataLoader
+
+
 
 
 #%%
@@ -86,16 +89,34 @@ class MainController:
             return LLMRegressionImprover(llm_model)
         return LLMImprover(llm_model)
           
+    # def _load_data(self):
+    #     """
+    #     Load the training and test data from the joblib file.
+
+    #     Returns:
+    #         dict: A dictionary containing X_train, y_train, X_test, and y_test.
+    #     """
+    #     try:
+    #         data = joblib.load(self.joblib_file_path)
+    #         logging.info(f"Data loaded successfully from {self.joblib_file_path}")
+    #         return data
+    #     except Exception as e:
+    #         logging.error(f"Failed to load data from {self.joblib_file_path}: {e}")
+    #         return None
+    
     def _load_data(self):
         """
-        Load the training and test data from the joblib file.
-
+        Load the training and test data using the DataLoader.
+    
         Returns:
             dict: A dictionary containing X_train, y_train, X_test, and y_test.
         """
         try:
-            data = joblib.load(self.joblib_file_path)
-            logging.info(f"Data loaded successfully from {self.joblib_file_path}")
+            data = DataLoader.load_data(self.joblib_file_path)  # Handle both file and directory inputs
+            logging.info(f"Data loaded successfully from {self.joblib_file_path}")            
+            
+            self.is_regression = is_regression(data['y_train'])
+            
             return data
         except Exception as e:
             logging.error(f"Failed to load data from {self.joblib_file_path}: {e}")

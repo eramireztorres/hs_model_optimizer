@@ -72,14 +72,33 @@ The application uses 'y_train' data to determine if it is a classification or re
 
 hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MODEL] [--iterations ITERATIONS]
 
+### Supported Input File Formats
 
-### Optional Arguments
+The application now supports the following file formats for input:
+- `.joblib` (default format)
+- `.csv`
+- `.json`
+- `.txt` or `.md`
+
+Each file must contain `X_train`, `y_train`, `X_test`, and `y_test` data. Examples:
+
+**CSV Example**:
+```csv
+X_train,y_train,X_test,y_test
+[1,2,3],[0,1,0],[4,5,6],[1,0,1]
+```
+
+
+### Arguments
 
 - **`-h, --help`**:  
   Show the help message and exit.
 
 - **`--data DATA`, `-d DATA`**:  
-  Path to a `.joblib` file containing training and test data. The file should include a dictionary with keys like `'X_train'`, `'y_train'`, `'X_test'`, and `'y_test'`. These should be NumPy arrays representing the feature and target datasets for model training and evaluation.
+  Path to a `.joblib` file or a directory containing `.csv` files for `X_train`, `y_train`, `X_test`, and `y_test`. 
+  If joblib file is used, it should include a dictionary with keys like 'X_train', 'y_train', 'X_test', and 'y_test'. 
+  These should be NumPy arrays representing the feature and target datasets for model training and evaluation.
+
 
 - **`--history-file-path HISTORY_FILE_PATH`, `-hfp HISTORY_FILE_PATH`**:  
   Path to the `.txt`  or `.joblib` file where the model history will be saved. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is `'model_history.joblib'`.
