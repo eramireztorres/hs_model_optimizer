@@ -85,7 +85,7 @@ Each file must contain `X_train`, `y_train`, `X_test`, and `y_test` data. Exampl
 **CSV Example**:
 ```csv
 X_train,y_train,X_test,y_test
-[1,2,3],[0,1,0],[4,5,6],[1,0,1]
+1 2 3,0 1 0,4 5 6,1 0 1
 ```
 
 
