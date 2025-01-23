@@ -1,4 +1,4 @@
-#LLM-Powered Model Optimizer Project
+# LLM-Powered Model Optimizer Project
 
 This project aims to optimize machine learning models by iterating through model training, evaluation, and improvements using an LLM (Large Language Model). The system dynamically improves models and hyperparameters across scikit-learn, LightGBM and XGBoost models.
 
