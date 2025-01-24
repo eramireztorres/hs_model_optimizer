@@ -106,6 +106,12 @@ X_train,y_train,X_test,y_test
 - **`--model MODEL`, `-m MODEL`**:  
   The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'gpt-4o-mini'`.
 
+- **`--metrics-source METRICS_SOURCE`, `-ms METRICS_SOURCE`**:  
+  Specify the source of the metrics to show to the LLM.  
+  Options:
+    - `validation` (default): Metrics are computed on a validation split created from the training data.
+    - `test`: Metrics are computed on the test data.
+
 - **`--iterations ITERATIONS`, `-i ITERATIONS`**:  
   The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `10`.
 
