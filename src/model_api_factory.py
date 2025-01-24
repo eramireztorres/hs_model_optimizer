@@ -14,7 +14,10 @@ class ModelAPIFactory:
         'gpt': 'openai',
         'gpt-4o': 'openai',
         'gpt-4o-mini': 'openai',
-        'llama': 'llama'
+        'llama': 'llama',
+        'google': 'google',
+        'gemini': 'google',
+        
     }
 
     @classmethod
@@ -68,3 +71,4 @@ class ModelAPIFactory:
 # Register the models with the factory
 ModelAPIFactory.register_model('openai', OpenAIModelAPI)
 ModelAPIFactory.register_model('llama', LlamaModelAPI)
+ModelAPIFactory.register_model('google', LlamaModelAPI)
