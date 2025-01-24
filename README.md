@@ -104,10 +104,10 @@ X_train,y_train,X_test,y_test
   Path to the `.txt`  or `.joblib` file where the model history will be saved. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is `'model_history.joblib'`.
 
 - **`--model MODEL`, `-m MODEL`**:  
-  The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'meta-llama/llama-3.1-405b-instruct:free'`.
+  The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'gpt-4o-mini'`.
 
 - **`--iterations ITERATIONS`, `-i ITERATIONS`**:  
-  The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `5`.
+  The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `10`.
 
 
 - **`--extra-info EXTRA_INFO, -ei EXTRA_INFO`**:
