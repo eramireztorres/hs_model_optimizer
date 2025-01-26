@@ -19,6 +19,12 @@ def select_model_cli(data,
                      metrics_source: str = 'validation'):
     """
     Args:
+      
+        data: Path to a `.joblib` file or a directory containing `.csv` files. 
+        The input can include pre-split data ('X_train', 'y_train', 'X_test', 'y_test') or
+        unsplit data ('X', 'y'), in which case a validation split will be created.
+
+
         model (str, optional): The LLM model name (e.g., 'gpt-4', 'llama-3.1').
         model_provider (str, optional): The LLM provider name ('openai', 'llama', 'google').
         ...
