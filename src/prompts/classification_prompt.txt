@@ -1,19 +1,19 @@
+Here's the updated version of your prompt with a concise addition to ensure the LLM provides only the load_model function:
+
 You are provided with the following Python model that implements a machine learning classifier:
 
 {current_model_code}
 
-Classification metrics for this model are:
-{metrics_str}
+Classification metrics for this model are: {metrics_str}
 
-Previous models and their performance metrics are:
-{history_str}
+Previous models and their performance metrics are: {history_str}
 
-Additional Information:
-{extra_info}
+Additional Information: {extra_info}
 
 Task:
-Based on the given model and its performance, suggest improvements. You may either:
-    - Change the model to a different classifier (e.g., XGBoost).
+Based on the given model and its performance, suggest improvements. Your response must only include a single Python function named load_model that defines the model and returns it. Ensure all necessary imports are included within the function. Do not include any explanations, markdown formatting, or extra code outside of this function.
+In the suggested improvements, you may either:
+    - Change the model to a different classifier or ensemble.
     - Adjust the hyperparameters of the current model, especially if the metrics are already high.
     - Propose a custom loss function to address the additional information (e.g., class imbalance, noisy labels).
     - Focus on improving underperforming classes based on their precision, recall, or F1 score.

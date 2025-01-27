@@ -12,7 +12,8 @@ from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 from gpt import Gpt4AnswerGenerator
 from model_api_factory import ModelAPIFactory
-from data_loader import DataLoader  # Import the new DataLoader
+from data_loader import DataLoader  
+from llm_code_cleaner import LLMCodeCleaner
 
 
 
@@ -92,15 +93,18 @@ class MainController:
             logging.error(f"Failed to load data from {self.joblib_file_path}: {e}")
             return None
 
-    def run(self, iterations=5):
+
+    def run(self, iterations=5, max_retries=1):
         """
         Run the training and improvement process for the specified number of iterations.
+        Retries up to `max_retries` times if the LLM provides invalid code.
         """
         original_model_code = self._backup_original_model()
+        last_valid_model_code = original_model_code
         if not original_model_code:
             logging.error("Failed to backup the original model. Exiting.")
             return
-        
+    
         if self.metrics_source == "validation":
             from sklearn.model_selection import train_test_split
     
@@ -110,39 +114,65 @@ class MainController:
     
                 # Decide on metrics source: validation or test
                 if self.metrics_source == "validation":
-                    # Create a validation split from training data
                     X_train, X_val, y_train, y_val = train_test_split(
                         self.data['X_train'], self.data['y_train'], test_size=0.2, random_state=42
                     )
                 else:
-                    # Use the original test data
                     X_train, y_train = self.data['X_train'], self.data['y_train']
                     X_val, y_val = self.data['X_test'], self.data['y_test']
     
-                model = self.dynamic_updater.run_dynamic_model()
+                retries = 0
+                model = None
+                while retries < max_retries:
+                    model = self.dynamic_updater.run_dynamic_model()
+                    if model is not None:
+                        break  # Exit retry loop if valid model is returned
+    
+                    logging.error(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
+                    print(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
+    
+                    # Request new suggestions from the LLM
+                    improved_code = self.llm_improver.get_model_suggestions(
+                        last_valid_model_code, {}, extra_info=self.extra_info
+                    )
+    
+                    # Log the response from the LLM
+                    if improved_code:
+                        print("\n=== LLM Suggested Code ===")
+                        print(improved_code)  # Display the suggested code in the console
+                        logging.info(f"LLM suggested code:\n{improved_code}")
+    
+                        # Clean and update the dynamic model code
+                        # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+                        # improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                        
+                        
+                        cleaner = LLMCodeCleaner()
+                        improved_code = cleaner.clean_code(improved_code)
+                        self.dynamic_updater.update_model_code(improved_code)
+                    else:
+                        logging.warning("No new suggestions received from LLM. Skipping retry.")
+                        print("No new suggestions received from LLM. Skipping retry.")
+                        break
+    
+                    retries += 1
+    
                 if model is None:
-                    logging.error("No model returned by the dynamic model. Exiting.")
-                    break
+                    logging.error(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    print(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    continue
     
                 print(f"Model for iteration {iteration + 1}: {model.__class__.__name__}")
     
                 # Select the appropriate trainer (regression or classification)
-                if self.is_regression:
-                    self.model_trainer = RegressionModelTrainer(
-                        model=model,
-                        X_train=X_train,
-                        y_train=y_train,
-                        X_test=X_val,  # Use validation or test data
-                        y_test=y_val   # Use validation or test data
-                    )
-                else:
-                    self.model_trainer = ModelTrainer(
-                        model=model,
-                        X_train=X_train,
-                        y_train=y_train,
-                        X_test=X_val,  # Use validation or test data
-                        y_test=y_val   # Use validation or test data
-                    )
+                trainer_class = RegressionModelTrainer if self.is_regression else ModelTrainer
+                self.model_trainer = trainer_class(
+                    model=model,
+                    X_train=X_train,
+                    y_train=y_train,
+                    X_test=X_val,
+                    y_test=y_val
+                )
     
                 # Train and evaluate the model
                 self.model_trainer.train_model()
@@ -157,6 +187,9 @@ class MainController:
                 if self.output_models_path is not None:
                     self._save_model(iteration, model)
     
+                # Update last valid model code
+                last_valid_model_code = current_model_code
+    
                 self.llm_improver.log_model_history(current_model_code, metrics)
     
                 # Get improved model code from the LLM
@@ -164,16 +197,19 @@ class MainController:
                     current_model_code, metrics, extra_info=self.extra_info
                 )
     
-                # Clean up the returned code
                 if improved_code:
-                    improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
-                    improved_code = re.sub(r'^python\n', '', improved_code).strip()
-                else:
-                    logging.warning("Improved code is None. Skipping update.")
-                    improved_code = ""
+                    print("\n=== LLM Suggested Code ===")
+                    # print(improved_code)  # Display the suggested code in the console
+                    logging.info(f"LLM suggested code:\n{improved_code}")
     
-                if improved_code:
-                    print(f"Improved model code for iteration {iteration + 1} received from LLM.")
+                    # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+                    # improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                    
+                    
+                    cleaner = LLMCodeCleaner()
+                    improved_code = cleaner.clean_code(improved_code)
+                    # print(f'CLEANED CODED: \n {improved_code}')
+                    
                     self.dynamic_updater.update_model_code(improved_code)
                 else:
                     logging.warning("No improvements suggested by the LLM in this iteration.")
@@ -184,6 +220,205 @@ class MainController:
                 self.dynamic_updater.update_model_code(original_model_code)
                 print("Original model restored after iterations.")
                 logging.info("Original model restored after iterations.")
+
+
+    # def run(self, iterations=5, max_retries=1):
+    #     """
+    #     Run the training and improvement process for the specified number of iterations.
+    #     Retries up to `max_retries` times if the LLM provides invalid code.
+    #     """
+    #     original_model_code = self._backup_original_model()
+    #     last_valid_model_code = original_model_code
+    #     if not original_model_code:
+    #         logging.error("Failed to backup the original model. Exiting.")
+    #         return
+    
+    #     if self.metrics_source == "validation":
+    #         from sklearn.model_selection import train_test_split
+    
+    #     try:
+    #         for iteration in range(iterations):
+    #             print(f"\n=== Iteration {iteration + 1} ===")
+    
+    #             # Decide on metrics source: validation or test
+    #             if self.metrics_source == "validation":
+    #                 X_train, X_val, y_train, y_val = train_test_split(
+    #                     self.data['X_train'], self.data['y_train'], test_size=0.2, random_state=42
+    #                 )
+    #             else:
+    #                 X_train, y_train = self.data['X_train'], self.data['y_train']
+    #                 X_val, y_val = self.data['X_test'], self.data['y_test']
+    
+    #             retries = 0
+    #             model = None
+    #             while retries < max_retries:
+    #                 model = self.dynamic_updater.run_dynamic_model()
+    #                 if model is not None:
+    #                     break  # Exit retry loop if valid model is returned
+    
+    #                 logging.error(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
+    #                 improved_code = self.llm_improver.get_model_suggestions(
+    #                     last_valid_model_code, {}, extra_info=self.extra_info
+    #                 )
+    
+    #                 if improved_code:
+    #                     improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+    #                     improved_code = re.sub(r'^python\n', '', improved_code).strip()
+    #                     self.dynamic_updater.update_model_code(improved_code)
+    #                 else:
+    #                     logging.warning("No new suggestions received from LLM. Skipping retry.")
+    #                     break
+    
+    #                 retries += 1
+    
+    #             if model is None:
+    #                 logging.error(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+    #                 continue
+    
+    #             print(f"Model for iteration {iteration + 1}: {model.__class__.__name__}")
+    
+    #             # Select the appropriate trainer (regression or classification)
+    #             trainer_class = RegressionModelTrainer if self.is_regression else ModelTrainer
+    #             self.model_trainer = trainer_class(
+    #                 model=model,
+    #                 X_train=X_train,
+    #                 y_train=y_train,
+    #                 X_test=X_val,
+    #                 y_test=y_val
+    #             )
+    
+    #             # Train and evaluate the model
+    #             self.model_trainer.train_model()
+    #             metrics = self.model_trainer.evaluate_model()
+    
+    #             print(f"Metrics for iteration {iteration + 1}: {metrics}")
+    
+    #             # Save model to history and joblib if output_models_path is provided
+    #             current_model_code = self._get_dynamic_model_code()
+    #             self.history_manager.save_model_history(current_model_code, metrics)
+    
+    #             if self.output_models_path is not None:
+    #                 self._save_model(iteration, model)
+    
+    #             # Update last valid model code
+    #             last_valid_model_code = current_model_code
+    
+    #             self.llm_improver.log_model_history(current_model_code, metrics)
+    
+    #             # Get improved model code from the LLM
+    #             improved_code = self.llm_improver.get_model_suggestions(
+    #                 current_model_code, metrics, extra_info=self.extra_info
+    #             )
+    
+    #             if improved_code:
+    #                 improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+    #                 improved_code = re.sub(r'^python\n', '', improved_code).strip()
+    #                 self.dynamic_updater.update_model_code(improved_code)
+    #             else:
+    #                 logging.warning("No improvements suggested by the LLM in this iteration.")
+    #                 print("No improvements suggested by the LLM in this iteration.")
+    
+    #     finally:
+    #         if original_model_code:
+    #             self.dynamic_updater.update_model_code(original_model_code)
+    #             print("Original model restored after iterations.")
+    #             logging.info("Original model restored after iterations.")
+
+
+
+
+    # def run(self, iterations=5):
+    #     """
+    #     Run the training and improvement process for the specified number of iterations.
+    #     """
+    #     original_model_code = self._backup_original_model()
+    #     if not original_model_code:
+    #         logging.error("Failed to backup the original model. Exiting.")
+    #         return
+        
+    #     if self.metrics_source == "validation":
+    #         from sklearn.model_selection import train_test_split
+    
+    #     try:
+    #         for iteration in range(iterations):
+    #             print(f"\n=== Iteration {iteration + 1} ===")
+    
+    #             # Decide on metrics source: validation or test
+    #             if self.metrics_source == "validation":
+    #                 # Create a validation split from training data
+    #                 X_train, X_val, y_train, y_val = train_test_split(
+    #                     self.data['X_train'], self.data['y_train'], test_size=0.2, random_state=42
+    #                 )
+    #             else:
+    #                 # Use the original test data
+    #                 X_train, y_train = self.data['X_train'], self.data['y_train']
+    #                 X_val, y_val = self.data['X_test'], self.data['y_test']
+    
+    #             model = self.dynamic_updater.run_dynamic_model()
+    #             if model is None:
+    #                 logging.error("No model returned by the dynamic model. Exiting.")
+    #                 break
+    
+    #             print(f"Model for iteration {iteration + 1}: {model.__class__.__name__}")
+    
+    #             # Select the appropriate trainer (regression or classification)
+    #             if self.is_regression:
+    #                 self.model_trainer = RegressionModelTrainer(
+    #                     model=model,
+    #                     X_train=X_train,
+    #                     y_train=y_train,
+    #                     X_test=X_val,  # Use validation or test data
+    #                     y_test=y_val   # Use validation or test data
+    #                 )
+    #             else:
+    #                 self.model_trainer = ModelTrainer(
+    #                     model=model,
+    #                     X_train=X_train,
+    #                     y_train=y_train,
+    #                     X_test=X_val,  # Use validation or test data
+    #                     y_test=y_val   # Use validation or test data
+    #                 )
+    
+    #             # Train and evaluate the model
+    #             self.model_trainer.train_model()
+    #             metrics = self.model_trainer.evaluate_model()
+    
+    #             print(f"Metrics for iteration {iteration + 1}: {metrics}")
+    
+    #             # Save model to history and joblib if output_models_path is provided
+    #             current_model_code = self._get_dynamic_model_code()
+    #             self.history_manager.save_model_history(current_model_code, metrics)
+    
+    #             if self.output_models_path is not None:
+    #                 self._save_model(iteration, model)
+    
+    #             self.llm_improver.log_model_history(current_model_code, metrics)
+    
+    #             # Get improved model code from the LLM
+    #             improved_code = self.llm_improver.get_model_suggestions(
+    #                 current_model_code, metrics, extra_info=self.extra_info
+    #             )
+    
+    #             # Clean up the returned code
+    #             if improved_code:
+    #                 improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+    #                 improved_code = re.sub(r'^python\n', '', improved_code).strip()
+    #             else:
+    #                 logging.warning("Improved code is None. Skipping update.")
+    #                 improved_code = ""
+    
+    #             if improved_code:
+    #                 print(f"Improved model code for iteration {iteration + 1} received from LLM.")
+    #                 self.dynamic_updater.update_model_code(improved_code)
+    #             else:
+    #                 logging.warning("No improvements suggested by the LLM in this iteration.")
+    #                 print("No improvements suggested by the LLM in this iteration.")
+    
+    #     finally:
+    #         if original_model_code:
+    #             self.dynamic_updater.update_model_code(original_model_code)
+    #             print("Original model restored after iterations.")
+    #             logging.info("Original model restored after iterations.")
 
 
 

@@ -95,9 +95,16 @@ X_train,y_train,X_test,y_test
   Show the help message and exit.
 
 - **`--data DATA`, `-d DATA`**:  
-  Path to a `.joblib` file or a directory containing `.csv` files for `X_train`, `y_train`, `X_test`, and `y_test`. 
-  If joblib file is used, it should include a dictionary with keys like 'X_train', 'y_train', 'X_test', and 'y_test'. 
-  These should be NumPy arrays representing the feature and target datasets for model training and evaluation.
+  Path to the input dataset. The following formats are supported:
+  1. **Pre-split `.joblib` file**: A dictionary with keys `'X_train'`, `'y_train'`, `'X_test'`, and `'y_test'`, containing NumPy arrays for feature and target datasets.
+  2. **Pre-split `.csv` files**: A directory containing the files:
+     - `X_train.csv`, `y_train.csv`, `X_test.csv`, and `y_test.csv`.
+  3. **Unsplit `.joblib` file**: A dictionary with keys `'X'` and `'y'`. The application will create a validation split (80/20 by default).
+  4. **Unsplit `.csv` files**: A directory containing `X.csv` (features) and `y.csv` (targets). The application will create a validation split.
+  5. **Single `.csv` file**: A file where:
+     - Columns represent features, and the last column is assumed to be the target (`y`).
+
+  The application automatically handles validation splits for unsplit datasets. Ensure the input format matches one of the above options.
 
 
 - **`--history-file-path HISTORY_FILE_PATH`, `-hfp HISTORY_FILE_PATH`**:  
