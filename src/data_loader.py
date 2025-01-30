@@ -1,9 +1,12 @@
 import pandas as pd
+import numpy as np
 import json
 import joblib
 from pathlib import Path
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
 
 class DataLoader:
     @staticmethod
@@ -173,6 +176,15 @@ class DataLoader:
                 X = DataLoader._encode_categorical(X, categorical_cols)
 
             return DataLoader._split_data(X, y)
+        
+        
+        # Fill missing numerical values
+        for col in X_train.select_dtypes(include=['number']).columns:
+            X_train[col] = X_train[col].fillna(X_train[col].median())
+        
+        for col in X_test.select_dtypes(include=['number']).columns:
+            X_test[col] = X_test[col].fillna(X_test[col].median())
+
 
         raise ValueError("Invalid directory structure: Must contain either ('X_train', 'y_train', 'X_test', 'y_test') or ('X', 'y').")
 
@@ -191,6 +203,8 @@ class DataLoader:
             pd.DataFrame: Transformed feature dataframe.
         """
         encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+        X[categorical_cols] = X[categorical_cols].fillna("Missing")  # Fill NaN values
+
 
         if fit:
             transformed = encoder.fit_transform(X[categorical_cols])
@@ -251,19 +265,38 @@ class DataLoader:
         Load data from a CSV file. Automatically detects categorical features and encodes them.
         """
         df = pd.read_csv(file_path)
-
+    
         # Identify target column (last column assumed to be the target)
         target_col = df.columns[-1]
         X = df.drop(columns=[target_col])
         y = df[target_col]
-
+    
+        # Fill missing numerical values with the median
+        for col in X.select_dtypes(include=['number']).columns:
+            X[col] = X[col].fillna(X[col].median())
+    
         # Identify categorical features (non-numeric)
         categorical_cols = X.select_dtypes(include=['object']).columns
-
+    
         if len(categorical_cols) > 0:
             print(f"Encoding categorical columns: {list(categorical_cols)}")
             X = DataLoader._encode_categorical(X, categorical_cols)
-
+    
+        # Fill any remaining NaN values in X after encoding
+        X.fillna(0, inplace=True)
+    
+        # Convert categorical encodings to float32 (ensures compatibility with models)
+        X = X.astype('float32')
+    
+        # Replace any infinite values (if present)
+        X.replace([np.inf, -np.inf], np.nan, inplace=True)
+        X.fillna(0, inplace=True)
+    
+        # === Apply Standardization Here ===
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        X = pd.DataFrame(X_scaled, columns=X.columns)  # Preserve column names
+    
         return DataLoader._split_data(X, y)
 
     
@@ -279,5 +312,10 @@ class DataLoader:
         Split data into training and testing sets.
         """
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+        
+        y_train = y_train.fillna(y_train.median())
+        y_test = y_test.fillna(y_test.median())
+
+        
         return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
                 'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}
