@@ -2,7 +2,8 @@ import pandas as pd
 import json
 import joblib
 from pathlib import Path
-
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
 
 class DataLoader:
     @staticmethod
@@ -91,47 +92,119 @@ class DataLoader:
             raise ValueError(f"Unsupported file type: {file_path}")
 
 
+    # @staticmethod
+    # def _load_from_directory(directory_path):
+    #     """
+    #     Load data from a directory. Supports:
+    #     1. Pre-split files: X_train.csv, y_train.csv, X_test.csv, y_test.csv.
+    #     2. Unsplit files: X.csv, y.csv (splits into train and test internally).
+    #     """
+    #     from sklearn.model_selection import train_test_split
+    
+    #     # Collect all CSV files in the directory
+    #     files = {f.stem: f for f in directory_path.iterdir() if f.suffix == '.csv'}
+    
+    #     # Case 1: Pre-split data
+    #     required_files_pre_split = {'X_train', 'y_train', 'X_test', 'y_test'}
+    #     if required_files_pre_split.issubset(files.keys()):
+    #         return {
+    #             'X_train': pd.read_csv(files['X_train']).to_numpy(),
+    #             'y_train': pd.read_csv(files['y_train']).to_numpy().ravel(),
+    #             'X_test': pd.read_csv(files['X_test']).to_numpy(),
+    #             'y_test': pd.read_csv(files['y_test']).to_numpy().ravel(),
+    #         }
+    
+    #     # Case 2: Unsplit data (X.csv and y.csv)
+    #     required_files_unsplit = {'X', 'y'}
+    #     if required_files_unsplit.issubset(files.keys()):
+    #         X = pd.read_csv(files['X']).to_numpy()
+    #         y = pd.read_csv(files['y']).to_numpy().ravel()
+    #         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    #         return {
+    #             'X_train': X_train,
+    #             'y_train': y_train,
+    #             'X_test': X_test,
+    #             'y_test': y_test,
+    #         }
+    
+    #     # If neither case is satisfied, raise an error
+    #     raise ValueError(
+    #         "Directory must contain either:\n"
+    #         "1. Pre-split files: X_train.csv, y_train.csv, X_test.csv, y_test.csv, or\n"
+    #         "2. Unsplit files: X.csv and y.csv."
+    #     )
+
+
     @staticmethod
     def _load_from_directory(directory_path):
         """
-        Load data from a directory. Supports:
-        1. Pre-split files: X_train.csv, y_train.csv, X_test.csv, y_test.csv.
-        2. Unsplit files: X.csv, y.csv (splits into train and test internally).
+        Load data from a directory, handling cases with pre-split or unsplit CSV files.
         """
-        from sklearn.model_selection import train_test_split
-    
-        # Collect all CSV files in the directory
         files = {f.stem: f for f in directory_path.iterdir() if f.suffix == '.csv'}
-    
+
         # Case 1: Pre-split data
-        required_files_pre_split = {'X_train', 'y_train', 'X_test', 'y_test'}
-        if required_files_pre_split.issubset(files.keys()):
-            return {
-                'X_train': pd.read_csv(files['X_train']).to_numpy(),
-                'y_train': pd.read_csv(files['y_train']).to_numpy().ravel(),
-                'X_test': pd.read_csv(files['X_test']).to_numpy(),
-                'y_test': pd.read_csv(files['y_test']).to_numpy().ravel(),
-            }
-    
-        # Case 2: Unsplit data (X.csv and y.csv)
-        required_files_unsplit = {'X', 'y'}
-        if required_files_unsplit.issubset(files.keys()):
-            X = pd.read_csv(files['X']).to_numpy()
-            y = pd.read_csv(files['y']).to_numpy().ravel()
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            return {
-                'X_train': X_train,
-                'y_train': y_train,
-                'X_test': X_test,
-                'y_test': y_test,
-            }
-    
-        # If neither case is satisfied, raise an error
-        raise ValueError(
-            "Directory must contain either:\n"
-            "1. Pre-split files: X_train.csv, y_train.csv, X_test.csv, y_test.csv, or\n"
-            "2. Unsplit files: X.csv and y.csv."
-        )
+        if {'X_train', 'y_train', 'X_test', 'y_test'}.issubset(files.keys()):
+            X_train = pd.read_csv(files['X_train'])
+            y_train = pd.read_csv(files['y_train']).squeeze()  # Convert to Series
+            X_test = pd.read_csv(files['X_test'])
+            y_test = pd.read_csv(files['y_test']).squeeze()
+
+            # Identify categorical columns in training data
+            categorical_cols = X_train.select_dtypes(include=['object']).columns
+
+            if len(categorical_cols) > 0:
+                print(f"Encoding categorical columns: {list(categorical_cols)}")
+                X_train = DataLoader._encode_categorical(X_train, categorical_cols)
+                X_test = DataLoader._encode_categorical(X_test, categorical_cols, fit=False)
+
+            return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
+                    'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}
+
+        # Case 2: Unsplit data (X.csv, y.csv)
+        elif {'X', 'y'}.issubset(files.keys()):
+            X = pd.read_csv(files['X'])
+            y = pd.read_csv(files['y']).squeeze()
+
+            # Identify categorical columns
+            categorical_cols = X.select_dtypes(include=['object']).columns
+
+            if len(categorical_cols) > 0:
+                print(f"Encoding categorical columns: {list(categorical_cols)}")
+                X = DataLoader._encode_categorical(X, categorical_cols)
+
+            return DataLoader._split_data(X, y)
+
+        raise ValueError("Invalid directory structure: Must contain either ('X_train', 'y_train', 'X_test', 'y_test') or ('X', 'y').")
+
+
+    @staticmethod
+    def _encode_categorical(X, categorical_cols, fit=True):
+        """
+        Encode categorical features using One-Hot Encoding.
+
+        Args:
+            X (pd.DataFrame): Feature dataframe.
+            categorical_cols (list): List of categorical column names.
+            fit (bool): Whether to fit a new encoder or use an existing one.
+
+        Returns:
+            pd.DataFrame: Transformed feature dataframe.
+        """
+        encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+
+        if fit:
+            transformed = encoder.fit_transform(X[categorical_cols])
+        else:
+            transformed = encoder.transform(X[categorical_cols])
+
+        # Convert back to DataFrame
+        encoded_df = pd.DataFrame(transformed, columns=encoder.get_feature_names_out(categorical_cols), index=X.index)
+
+        # Drop original categorical columns and concatenate new encoded columns
+        X = X.drop(columns=categorical_cols)
+        X = pd.concat([X, encoded_df], axis=1)
+
+        return X
 
     
     # @staticmethod
@@ -153,28 +226,58 @@ class DataLoader:
         else:
             raise ValueError("Input data must contain either ('X_train', 'y_train', 'X_test', 'y_test') or ('X', 'y').")
     
+    # @staticmethod
+    # def _handle_csv_file(file_path):
+    #     """
+    #     Load data from a CSV file. If the columns 'X' and 'y' are present, use them. 
+    #     Otherwise, assume the last column is the target ('y') and all preceding columns are features ('X').
+    #     """
+    #     df = pd.read_csv(file_path)
+    
+    #     # Check if 'X' and 'y' are explicitly labeled
+    #     if 'X' in df.columns and 'y' in df.columns:
+    #         X = df.drop('y', axis=1).to_numpy()
+    #         y = df['y'].to_numpy()
+    #     else:
+    #         # Assume the last column is the target and all preceding columns are features
+    #         X = df.iloc[:, :-1].to_numpy()  # All columns except the last
+    #         y = df.iloc[:, -1].to_numpy()   # Last column
+    
+    #     return DataLoader._split_data(X, y)
+    
     @staticmethod
     def _handle_csv_file(file_path):
         """
-        Load data from a CSV file. If the columns 'X' and 'y' are present, use them. 
-        Otherwise, assume the last column is the target ('y') and all preceding columns are features ('X').
+        Load data from a CSV file. Automatically detects categorical features and encodes them.
         """
         df = pd.read_csv(file_path)
-    
-        # Check if 'X' and 'y' are explicitly labeled
-        if 'X' in df.columns and 'y' in df.columns:
-            X = df.drop('y', axis=1).to_numpy()
-            y = df['y'].to_numpy()
-        else:
-            # Assume the last column is the target and all preceding columns are features
-            X = df.iloc[:, :-1].to_numpy()  # All columns except the last
-            y = df.iloc[:, -1].to_numpy()   # Last column
-    
+
+        # Identify target column (last column assumed to be the target)
+        target_col = df.columns[-1]
+        X = df.drop(columns=[target_col])
+        y = df[target_col]
+
+        # Identify categorical features (non-numeric)
+        categorical_cols = X.select_dtypes(include=['object']).columns
+
+        if len(categorical_cols) > 0:
+            print(f"Encoding categorical columns: {list(categorical_cols)}")
+            X = DataLoader._encode_categorical(X, categorical_cols)
+
         return DataLoader._split_data(X, y)
 
     
+    # @staticmethod
+    # def _split_data(X, y, test_size=0.2, random_state=42):
+    #     from sklearn.model_selection import train_test_split
+    #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    #     return {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
+    
     @staticmethod
     def _split_data(X, y, test_size=0.2, random_state=42):
-        from sklearn.model_selection import train_test_split
+        """
+        Split data into training and testing sets.
+        """
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-        return {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
+        return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
+                'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}

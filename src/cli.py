@@ -1,3 +1,5 @@
+from typing import Literal
+
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
@@ -16,6 +18,7 @@ def select_model_cli(data,
                      iterations: int = 10,
                      extra_info: str = 'Not available',
                      output_models_path: str = None,
+                     is_regression: Literal["true", "false"] = "false",
                      metrics_source: str = 'validation'):
     """
     Command-line interface function for selecting and running an optimization model.
@@ -61,6 +64,8 @@ def select_model_cli(data,
 
     print(f"Using model: {model} (provider: {model_provider})")
     print(f"Metrics source: {metrics_source}")
+    
+    is_regression = is_regression == 'true'
 
     controller = MainController(
         joblib_file_path=data,
@@ -69,7 +74,8 @@ def select_model_cli(data,
         history_file_path=history_file_path,
         extra_info=extra_info,
         output_models_path=output_models_path,
-        metrics_source=metrics_source
+        metrics_source=metrics_source,
+        is_regression_bool=is_regression
     )
     controller.run(iterations=iterations)
 

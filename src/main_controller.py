@@ -22,7 +22,7 @@ from llm_code_cleaner import LLMCodeCleaner
 
 class MainController:       
     def __init__(self, joblib_file_path, model_provider, history_file_path, model=None,
-                 is_regression_bool=False, extra_info="Not available", output_models_path=None,
+                 is_regression_bool=None, extra_info="Not available", output_models_path=None,
                  metrics_source="validation"):
         """
         Initialize the MainController.
@@ -37,10 +37,10 @@ class MainController:
         """
         self.joblib_file_path = joblib_file_path
         self.history_manager = ModelHistoryManager(history_file_path=history_file_path)
+        self.is_regression = is_regression_bool
         self.data = self._load_data()
         self.extra_info = extra_info
-        self.model_trainer = None
-        self.is_regression = is_regression_bool
+        self.model_trainer = None        
         self.output_models_path = output_models_path
 
         # Dynamically initialize the LLM model
@@ -86,7 +86,8 @@ class MainController:
             data = DataLoader.load_data(self.joblib_file_path)  # Handle both file and directory inputs
             logging.info(f"Data loaded successfully from {self.joblib_file_path}")            
             
-            self.is_regression = is_regression(data['y_train'])
+            if self.is_regression is None:
+                self.is_regression = is_regression(data['y_train'])
             
             return data
         except Exception as e:
