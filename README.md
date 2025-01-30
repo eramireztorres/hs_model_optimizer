@@ -120,6 +120,13 @@ The application supports the following input formats:
 - **`--model MODEL`, `-m MODEL`**:  
   The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'gpt-4o-mini'`.
 
+- **`--is-regression IS_REGRESSION`, `-ir IS_REGRESSION`**:
+  Specify the type of model to train.  
+  Options:
+    - `true`: Regression.
+    - `false`: Classification.
+    If not specified, the model type is inferred from the data target: if they are all integers, it is assumed to be classification.
+
 - **`--metrics-source METRICS_SOURCE`, `-ms METRICS_SOURCE`**:  
   Specify the source of the metrics to show to the LLM.  
   Options:

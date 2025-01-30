@@ -18,7 +18,7 @@ def select_model_cli(data,
                      iterations: int = 10,
                      extra_info: str = 'Not available',
                      output_models_path: str = None,
-                     is_regression: Literal["true", "false"] = "false",
+                     is_regression: Literal[None, "true", "false"] = None,
                      metrics_source: str = 'validation'):
     """
     Command-line interface function for selecting and running an optimization model.
@@ -65,7 +65,8 @@ def select_model_cli(data,
     print(f"Using model: {model} (provider: {model_provider})")
     print(f"Metrics source: {metrics_source}")
     
-    is_regression = is_regression == 'true'
+    if is_regression is not None:
+        is_regression = is_regression == 'true'
 
     controller = MainController(
         joblib_file_path=data,
