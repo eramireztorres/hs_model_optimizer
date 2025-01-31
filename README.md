@@ -136,6 +136,8 @@ The application supports the following input formats:
 - **`--iterations ITERATIONS`, `-i ITERATIONS`**:  
   The number of iterations to run. Each iteration involves training a model, evaluating its performance, and generating improvements. Default is `10`.
 
+- **`--error-model ERROR_MODEL`, `-em ERROR_MODEL`**:  
+  The name of the LLM model to use for error corrections. If not specified, `--model` is used.
 
 - **`--extra-info EXTRA_INFO, -ei EXTRA_INFO`**:
    Additional context or information to provide to the LLM for more informed suggestions. Examples include class imbalance, noisy labels, or outlier data. Default is 'Not available'.
