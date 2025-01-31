@@ -14,7 +14,7 @@ from gpt import Gpt4AnswerGenerator
 from model_api_factory import ModelAPIFactory
 from data_loader import DataLoader  
 from llm_code_cleaner import LLMCodeCleaner
-
+from error_corrector import ErrorCorrector
 
 
 
@@ -23,7 +23,9 @@ from llm_code_cleaner import LLMCodeCleaner
 class MainController:       
     def __init__(self, joblib_file_path, model_provider, history_file_path, model=None,
                  is_regression_bool=None, extra_info="Not available", output_models_path=None,
-                 metrics_source="validation"):
+                 metrics_source="validation",
+                 error_model: str = None,
+                 error_prompt_path: str = None):
         """
         Initialize the MainController.
 
@@ -50,6 +52,22 @@ class MainController:
         self.dynamic_updater = DynamicRegressionModelUpdater() if is_regression_bool else DynamicModelUpdater()
         
         self.metrics_source = metrics_source
+        
+        # Add these members:
+        self.error_corrector = None
+        if error_model:
+            error_llm = ModelAPIFactory.get_model_api(
+                provider=ModelAPIFactory.get_provider_from_model(error_model),
+                model=error_model
+            )
+        else:
+            # Use the main model as the error model
+            error_llm = ModelAPIFactory.get_model_api(
+                provider=ModelAPIFactory.get_provider_from_model(model),  # Use the main model's provider
+                model=model  # Use the main model
+            )
+        self.error_corrector = ErrorCorrector(error_llm, error_prompt_path)
+            
 
     def _initialize_llm_improver(self, model_provider, model):
         """
@@ -124,19 +142,81 @@ class MainController:
     
                 retries = 0
                 model = None
+                # while retries < max_retries:
+                #     model = self.dynamic_updater.run_dynamic_model()
+                #     if model is not None:
+                #         break  # Exit retry loop if valid model is returned
+    
+                #     logging.error(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
+                #     print(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
+    
+                #     # Request new suggestions from the LLM
+                #     improved_code = self.llm_improver.get_model_suggestions(
+                #         last_valid_model_code, {}, extra_info=self.extra_info
+                #     )
+    
+                #     # Log the response from the LLM
+                #     if improved_code:
+                #         print("\n=== LLM Suggested Code ===")
+                #         print(improved_code)  # Display the suggested code in the console
+                #         logging.info(f"LLM suggested code:\n{improved_code}")
+    
+                #         # Clean and update the dynamic model code
+                #         # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
+                #         # improved_code = re.sub(r'^python\n', '', improved_code).strip()
+                        
+                        
+                #         cleaner = LLMCodeCleaner()
+                #         improved_code = cleaner.clean_code(improved_code)
+                #         self.dynamic_updater.update_model_code(improved_code)
+                        
+                #         print("\n=== CLEANED Code ===")
+                #         print(improved_code)  # Display the suggested code in the console
+                #         logging.info(f"CLEANED code:\n{improved_code}")
+                        
+                #     else:
+                #         logging.warning("No new suggestions received from LLM. Skipping retry.")
+                #         print("No new suggestions received from LLM. Skipping retry.")
+                #         break
+    
+                #     retries += 1
+                
                 while retries < max_retries:
-                    model = self.dynamic_updater.run_dynamic_model()
+                    model, error_msg = self.dynamic_updater.run_dynamic_model()
+                    
                     if model is not None:
-                        break  # Exit retry loop if valid model is returned
-    
-                    logging.error(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
-                    print(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
-    
-                    # Request new suggestions from the LLM
-                    improved_code = self.llm_improver.get_model_suggestions(
-                        last_valid_model_code, {}, extra_info=self.extra_info
-                    )
-    
+                        break
+                    
+                    print(f'self.error_corrector: {self.error_corrector}')
+                        
+                    if self.error_corrector:
+                        # Get current faulty code
+                        current_code = self._get_dynamic_model_code()
+                        
+                        
+                        print("\n=== CURRENT Code before ERROR correction ===")
+                        print(current_code)
+                        
+                        # Get error correction
+                        improved_code = self.error_corrector.get_error_fix(
+                            current_code, error_msg
+                        )
+                        
+                        print("\n=== CURRENT Code after ERROR correction ===")
+                        print(improved_code)
+                        
+                    else:
+                        # Original fallback                       
+                      
+                        
+                        improved_code = self.llm_improver.get_model_suggestions(
+                            last_valid_model_code, {}, self.extra_info
+                        )
+                        
+                        print("\n=== CURRENT Code after retry ===")
+                        print(improved_code)
+                        
+                    
                     # Log the response from the LLM
                     if improved_code:
                         print("\n=== LLM Suggested Code ===")
@@ -151,13 +231,21 @@ class MainController:
                         cleaner = LLMCodeCleaner()
                         improved_code = cleaner.clean_code(improved_code)
                         self.dynamic_updater.update_model_code(improved_code)
+                        
+                        print("\n=== CLEANED Code ===")
+                        print(improved_code)  # Display the suggested code in the console
+                        logging.info(f"CLEANED code:\n{improved_code}")
+                        
+                        model, error_msg = self.dynamic_updater.run_dynamic_model()
+                        
                     else:
                         logging.warning("No new suggestions received from LLM. Skipping retry.")
                         print("No new suggestions received from LLM. Skipping retry.")
-                        break
-    
+                        continue
+                    
                     retries += 1
-    
+                
+                
                 if model is None:
                     logging.error(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
                     print(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
@@ -192,6 +280,10 @@ class MainController:
                 last_valid_model_code = current_model_code
     
                 self.llm_improver.log_model_history(current_model_code, metrics)
+                
+                
+                print("\n=== CURRENT Code before improvement ===")
+                print(current_model_code)
     
                 # Get improved model code from the LLM
                 improved_code = self.llm_improver.get_model_suggestions(
@@ -200,7 +292,7 @@ class MainController:
     
                 if improved_code:
                     print("\n=== LLM Suggested Code ===")
-                    # print(improved_code)  # Display the suggested code in the console
+                    print(improved_code)  # Display the suggested code in the console
                     logging.info(f"LLM suggested code:\n{improved_code}")
     
                     # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
@@ -209,7 +301,7 @@ class MainController:
                     
                     cleaner = LLMCodeCleaner()
                     improved_code = cleaner.clean_code(improved_code)
-                    # print(f'CLEANED CODED: \n {improved_code}')
+                    print(f'CLEANED CODED: \n {improved_code}')
                     
                     self.dynamic_updater.update_model_code(improved_code)
                 else:

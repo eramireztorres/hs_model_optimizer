@@ -19,7 +19,9 @@ def select_model_cli(data,
                      extra_info: str = 'Not available',
                      output_models_path: str = None,
                      is_regression: Literal[None, "true", "false"] = None,
-                     metrics_source: str = 'validation'):
+                     metrics_source: str = 'validation',
+                     error_model: str = None,
+                     ):
     """
     Command-line interface function for selecting and running an optimization model.
     This function loads the input data, initializes the optimization controller, 
@@ -56,6 +58,9 @@ def select_model_cli(data,
         delegates the optimization logic.
 
     """
+    
+    error_prompt_path: str = os.path.join(os.path.dirname(__file__), 'prompts/error_correction_prompt.txt')
+    
     if metrics_source not in ['validation', 'test']:
         raise ValueError("metrics_source must be 'validation' or 'test'")
     
@@ -76,7 +81,9 @@ def select_model_cli(data,
         extra_info=extra_info,
         output_models_path=output_models_path,
         metrics_source=metrics_source,
-        is_regression_bool=is_regression
+        is_regression_bool=is_regression,
+        error_model=error_model,
+        error_prompt_path=error_prompt_path
     )
     controller.run(iterations=iterations)
 

@@ -51,12 +51,14 @@ class DynamicModelUpdater:
             # Execute the `load_model()` function and return the model
             model = dynamic_module.load_model()
             logging.info("Successfully loaded the dynamically updated model.")
-            return model
+            # return model
+        
+            return model, None # (success case)
 
         except Exception as e:
-            logging.error(f"Failed to run the dynamic model: {e}")
-            return None
-
+            logging.error(f"Failed to run dynamic model: {str(e)}")
+            return None, str(e)  # Return both model and error message
+    
 class DynamicRegressionModelUpdater:
     def __init__(self, dynamic_file_path=dynamic_regression_file_path):
         self.dynamic_file_path = dynamic_file_path
@@ -85,8 +87,10 @@ class DynamicRegressionModelUpdater:
 
             model = dynamic_module.load_model()
             logging.info("Successfully loaded the dynamically updated regression model.")
-            return model
+            # return model
+        
+            return model, None # (success case)
 
         except Exception as e:
-            logging.error(f"Failed to run the dynamic regression model: {e}")
-            return None
+            logging.error(f"Failed to run dynamic regression model: {str(e)}")
+            return None, str(e)  # Return both model and error message
