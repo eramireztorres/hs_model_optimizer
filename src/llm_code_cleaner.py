@@ -68,51 +68,6 @@ class LLMCodeCleaner:
         return "\n".join(cleaned_lines)
 
 
-# class LLMCodeCleaner:
-#     """
-#     A class to clean and extract valid Python code from LLM responses.
-#     """
-
-#     @staticmethod
-#     def clean_code(llm_code: str) -> str:
-#         """
-#         Cleans the LLM's response, removing backticks and extracting the relevant return block.
-
-#         Args:
-#             llm_code (str): The raw code returned by the LLM.
-
-#         Returns:
-#             str: The cleaned code ready for execution.
-#         """
-#         # Step 1: Remove surrounding triple backticks
-#         llm_code = re.sub(r'^```.*\n', '', llm_code, count=1).strip()
-#         llm_code = re.sub(r'```$', '', llm_code, count=1).strip()
-
-#         # Step 2: Split lines to process line by line
-#         lines = llm_code.splitlines()
-#         cleaned_lines = []
-#         in_main_function = False  # Tracks if we're inside the main load_model function
-#         indentation_level = None
-
-#         for line in lines:
-#             # Detect the start of the load_model function
-#             if re.match(r'^\s*def load_model\(', line):
-#                 in_main_function = True
-#                 # Capture the main indentation level
-#                 indentation_level = len(line) - len(line.lstrip())
-
-#             # Process lines only if we are inside the main function
-#             if in_main_function:
-#                 cleaned_lines.append(line)
-
-#                 # If this line is a return at exactly one level deeper than the function def
-#                 if line.lstrip().startswith('return') and (
-#                    (len(line) - len(line.lstrip())) == indentation_level + 4):
-#                     break
-
-#         return '\n'.join(cleaned_lines)
-
-
 # Example usage:
 if __name__ == "__main__":
     raw_llm_code = """

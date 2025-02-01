@@ -144,14 +144,14 @@ class DataLoader:
         Load data from a directory, handling cases with pre-split or unsplit CSV files.
         """
         files = {f.stem: f for f in directory_path.iterdir() if f.suffix == '.csv'}
-
+        
         # Case 1: Pre-split data
         if {'X_train', 'y_train', 'X_test', 'y_test'}.issubset(files.keys()):
             X_train = pd.read_csv(files['X_train'])
-            y_train = pd.read_csv(files['y_train']).squeeze()  # Convert to Series
+            y_train = pd.read_csv(files['y_train']).squeeze()
             X_test = pd.read_csv(files['X_test'])
             y_test = pd.read_csv(files['y_test']).squeeze()
-
+            
             # Identify categorical columns in training data
             categorical_cols = X_train.select_dtypes(include=['object']).columns
 
@@ -159,23 +159,42 @@ class DataLoader:
                 print(f"Encoding categorical columns: {list(categorical_cols)}")
                 X_train = DataLoader._encode_categorical(X_train, categorical_cols)
                 X_test = DataLoader._encode_categorical(X_test, categorical_cols, fit=False)
-
-            return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
-                    'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}
+            
+            data = {
+                'X_train': X_train.to_numpy(),
+                'y_train': y_train.to_numpy(),
+                'X_test': X_test.to_numpy(),
+                'y_test': y_test.to_numpy()
+            }
+            data['is_pre_split'] = True
+            return data
 
         # Case 2: Unsplit data (X.csv, y.csv)
+        # elif {'X', 'y'}.issubset(files.keys()):
+        #     X = pd.read_csv(files['X'])
+        #     y = pd.read_csv(files['y']).squeeze()
+
+        #     # Identify categorical columns
+        #     categorical_cols = X.select_dtypes(include=['object']).columns
+
+        #     if len(categorical_cols) > 0:
+        #         print(f"Encoding categorical columns: {list(categorical_cols)}")
+        #         X = DataLoader._encode_categorical(X, categorical_cols)
+
+        #     return DataLoader._split_data(X, y)
+        
         elif {'X', 'y'}.issubset(files.keys()):
             X = pd.read_csv(files['X'])
             y = pd.read_csv(files['y']).squeeze()
-
-            # Identify categorical columns
+            
             categorical_cols = X.select_dtypes(include=['object']).columns
-
             if len(categorical_cols) > 0:
                 print(f"Encoding categorical columns: {list(categorical_cols)}")
                 X = DataLoader._encode_categorical(X, categorical_cols)
+            
+            # Return unsplit data with flag
+            return {'X': X, 'y': y, 'is_pre_split': False}
 
-            return DataLoader._split_data(X, y)
         
         
         # Fill missing numerical values
@@ -234,9 +253,12 @@ class DataLoader:
     @staticmethod
     def _handle_data_split(data):
         if 'X_train' in data and 'y_train' in data:
+            data['is_pre_split'] = True
             return data
         elif 'X' in data and 'y' in data:
-            return DataLoader._split_data(data['X'], data['y'])
+            # Return unsplit data along with a flag indicating unsplit data.
+            return {'X': data['X'], 'y': data['y'], 'is_pre_split': False}
+
         else:
             raise ValueError("Input data must contain either ('X_train', 'y_train', 'X_test', 'y_test') or ('X', 'y').")
     
@@ -258,46 +280,79 @@ class DataLoader:
     #         y = df.iloc[:, -1].to_numpy()   # Last column
     
     #     return DataLoader._split_data(X, y)
+  
     
     @staticmethod
     def _handle_csv_file(file_path):
-        """
-        Load data from a CSV file. Automatically detects categorical features and encodes them.
-        """
         df = pd.read_csv(file_path)
-    
+        
         # Identify target column (last column assumed to be the target)
         target_col = df.columns[-1]
         X = df.drop(columns=[target_col])
         y = df[target_col]
-    
+        
         # Fill missing numerical values with the median
         for col in X.select_dtypes(include=['number']).columns:
             X[col] = X[col].fillna(X[col].median())
-    
-        # Identify categorical features (non-numeric)
+        
+        # Identify and encode categorical features
         categorical_cols = X.select_dtypes(include=['object']).columns
-    
         if len(categorical_cols) > 0:
             print(f"Encoding categorical columns: {list(categorical_cols)}")
             X = DataLoader._encode_categorical(X, categorical_cols)
-    
-        # Fill any remaining NaN values in X after encoding
+        
+        # Standardize numeric values
         X.fillna(0, inplace=True)
-    
-        # Convert categorical encodings to float32 (ensures compatibility with models)
         X = X.astype('float32')
-    
-        # Replace any infinite values (if present)
         X.replace([np.inf, -np.inf], np.nan, inplace=True)
         X.fillna(0, inplace=True)
-    
-        # === Apply Standardization Here ===
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
-        X = pd.DataFrame(X_scaled, columns=X.columns)  # Preserve column names
+        X = pd.DataFrame(X_scaled, columns=X.columns)
+        
+        # Instead of splitting, return the unsplit data along with a flag.
+        # return {'X': X, 'y': y, 'is_pre_split': False}
+        return {'X': X.to_numpy(), 'y': y.to_numpy(), 'is_pre_split': False}
+
+    # @staticmethod
+    # def _handle_csv_file(file_path):
+    #     """
+    #     Load data from a CSV file. Automatically detects categorical features and encodes them.
+    #     """
+    #     df = pd.read_csv(file_path)
     
-        return DataLoader._split_data(X, y)
+    #     # Identify target column (last column assumed to be the target)
+    #     target_col = df.columns[-1]
+    #     X = df.drop(columns=[target_col])
+    #     y = df[target_col]
+    
+    #     # Fill missing numerical values with the median
+    #     for col in X.select_dtypes(include=['number']).columns:
+    #         X[col] = X[col].fillna(X[col].median())
+    
+    #     # Identify categorical features (non-numeric)
+    #     categorical_cols = X.select_dtypes(include=['object']).columns
+    
+    #     if len(categorical_cols) > 0:
+    #         print(f"Encoding categorical columns: {list(categorical_cols)}")
+    #         X = DataLoader._encode_categorical(X, categorical_cols)
+    
+    #     # Fill any remaining NaN values in X after encoding
+    #     X.fillna(0, inplace=True)
+    
+    #     # Convert categorical encodings to float32 (ensures compatibility with models)
+    #     X = X.astype('float32')
+    
+    #     # Replace any infinite values (if present)
+    #     X.replace([np.inf, -np.inf], np.nan, inplace=True)
+    #     X.fillna(0, inplace=True)
+    
+    #     # === Apply Standardization Here ===
+    #     scaler = StandardScaler()
+    #     X_scaled = scaler.fit_transform(X)
+    #     X = pd.DataFrame(X_scaled, columns=X.columns)  # Preserve column names
+    
+    #     return DataLoader._split_data(X, y)
 
     
     # @staticmethod
@@ -306,16 +361,41 @@ class DataLoader:
     #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     #     return {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
     
-    @staticmethod
-    def _split_data(X, y, test_size=0.2, random_state=42):
-        """
-        Split data into training and testing sets.
-        """
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    # @staticmethod
+    # def _split_data(X, y, test_size=0.2, random_state=42):
+    #     """
+    #     Split data into training and testing sets.
+    #     """
+    #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
         
-        y_train = y_train.fillna(y_train.median())
-        y_test = y_test.fillna(y_test.median())
+    #     y_train = y_train.fillna(y_train.median())
+    #     y_test = y_test.fillna(y_test.median())
 
         
-        return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
-                'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}
+    #     return {'X_train': X_train.to_numpy(), 'y_train': y_train.to_numpy(),
+    #             'X_test': X_test.to_numpy(), 'y_test': y_test.to_numpy()}
+
+
+    @staticmethod
+    def _split_data(X, y, test_size=0.2, random_state=42):
+        # Perform the split (train_test_split works with NumPy arrays)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+        
+        # Convert y_train and y_test to pandas Series if they aren't already,
+        # so that we can use the fillna method.
+        if not isinstance(y_train, pd.Series):
+            y_train = pd.Series(y_train)
+        if not isinstance(y_test, pd.Series):
+            y_test = pd.Series(y_test)
+        
+        # Now fill missing values using median
+        y_train = y_train.fillna(y_train.median())
+        y_test = y_test.fillna(y_test.median())
+        
+        # If your downstream code expects numpy arrays, you can convert back:
+        return {
+            'X_train': X_train if isinstance(X_train, np.ndarray) else X_train.to_numpy(),
+            'y_train': y_train.to_numpy(),
+            'X_test': X_test if isinstance(X_test, np.ndarray) else X_test.to_numpy(),
+            'y_test': y_test.to_numpy()
+        }
