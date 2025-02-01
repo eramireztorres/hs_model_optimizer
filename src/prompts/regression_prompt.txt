@@ -15,7 +15,7 @@ Task:
 Based on the given regression model and its performance, suggest improvements. Your response must only include a single Python function named load_model that defines the model and returns it. Ensure all necessary imports are included within the function. Do not include any explanations, markdown formatting, or extra code outside of this function.
 In the suggested improvements, you may either:
     - Change the regression model to a different one (e.g. XGBRegressor, LGBMRegressor, or some ensemble).
-    - Adjust the hyperparameters of the current model, especially if the metrics are already strong.
+    - Slightly modify the hyperparameters of the current model, especially if the metrics are already high.
     - Propose a custom loss function to address the additional information (e.g., noisy data, outliers, heteroscedasticity).
 
 **Example 1** (Switching to a more powerful model):
@@ -117,7 +117,7 @@ Extra Info:
 The model shows signs of high variance (overfitting) to the training data but performs well on test data.
 
 Suggested Improvement:
-Reduce the complexity of the model by adjusting hyperparameters to achieve a better balance between bias and variance:
+Reduce the complexity of the model by modifying hyperparameters to achieve a better balance between bias and variance:
 def load_model():
     from xgboost import XGBRegressor
     return XGBRegressor(n_estimators=400, max_depth=6, learning_rate=0.1, subsample=0.7, colsample_bytree=0.7)

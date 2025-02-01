@@ -14,11 +14,11 @@ Task:
 Based on the given model and its performance, suggest improvements. Your response must only include a single Python function named load_model that defines the model and returns it. Ensure all necessary imports are included within the function. Do not include any explanations, markdown formatting, or extra code outside of this function.
 In the suggested improvements, you may either:
     - Change the model to a different classifier or ensemble.
-    - Adjust the hyperparameters of the current model, especially if the metrics are already high.
+    - Slightly modify the hyperparameters of the current model, especially if the metrics are already high.
     - Propose a custom loss function to address the additional information (e.g., class imbalance, noisy labels).
     - Focus on improving underperforming classes based on their precision, recall, or F1 score.
     
-**Example 1** (Strong Metrics, Small Hyperparameter Tuning):
+**Example 1** (Strong Metrics, Small Hyperparameter Change):
 Previous Model:
 def load_model():
     from sklearn.ensemble import ExtraTreesClassifier
