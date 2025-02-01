@@ -118,7 +118,8 @@ The application supports the following input formats:
   Path to the `.txt`  or `.joblib` file where the model history will be saved. The history includes models, their hyperparameters, and performance metrics for each iteration. Default is `'model_history.joblib'`.
 
 - **`--model MODEL`, `-m MODEL`**:  
-  The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. Defaults to `'gpt-4o-mini'`.
+  The name of the LLM model to use for generating suggestions and improvements for models and hyperparameters. 
+  Examples: `'meta-llama/llama-3.2-3b-instruct:free'`, `'deepseek/deepseek-chat'`. Defaults to `'gpt-4o-mini'`.
 
 - **`--is-regression IS_REGRESSION`, `-ir IS_REGRESSION`**:
   Specify the type of model to train.  

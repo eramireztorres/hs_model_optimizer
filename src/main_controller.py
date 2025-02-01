@@ -142,45 +142,7 @@ class MainController:
     
                 retries = 0
                 model = None
-                # while retries < max_retries:
-                #     model = self.dynamic_updater.run_dynamic_model()
-                #     if model is not None:
-                #         break  # Exit retry loop if valid model is returned
-    
-                #     logging.error(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
-                #     print(f"Invalid model returned by the dynamic model. Retrying... ({retries + 1}/{max_retries})")
-    
-                #     # Request new suggestions from the LLM
-                #     improved_code = self.llm_improver.get_model_suggestions(
-                #         last_valid_model_code, {}, extra_info=self.extra_info
-                #     )
-    
-                #     # Log the response from the LLM
-                #     if improved_code:
-                #         print("\n=== LLM Suggested Code ===")
-                #         print(improved_code)  # Display the suggested code in the console
-                #         logging.info(f"LLM suggested code:\n{improved_code}")
-    
-                #         # Clean and update the dynamic model code
-                #         # improved_code = re.sub(r'^```.*\n', '', improved_code).strip().strip('```').strip()
-                #         # improved_code = re.sub(r'^python\n', '', improved_code).strip()
-                        
-                        
-                #         cleaner = LLMCodeCleaner()
-                #         improved_code = cleaner.clean_code(improved_code)
-                #         self.dynamic_updater.update_model_code(improved_code)
-                        
-                #         print("\n=== CLEANED Code ===")
-                #         print(improved_code)  # Display the suggested code in the console
-                #         logging.info(f"CLEANED code:\n{improved_code}")
-                        
-                #     else:
-                #         logging.warning("No new suggestions received from LLM. Skipping retry.")
-                #         print("No new suggestions received from LLM. Skipping retry.")
-                #         break
-    
-                #     retries += 1
-                
+              
                 while retries < max_retries:
                     model, error_msg = self.dynamic_updater.run_dynamic_model()
                     
