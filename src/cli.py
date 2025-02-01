@@ -59,7 +59,7 @@ def select_model_cli(data,
 
     """
     
-    error_prompt_path: str = os.path.join(os.path.dirname(__file__), 'prompts/error_correction_prompt.txt')
+    error_prompt_path = os.path.join(os.path.dirname(__file__), 'prompts/error_correction_prompt.txt')
     
     if metrics_source not in ['validation', 'test']:
         raise ValueError("metrics_source must be 'validation' or 'test'")
