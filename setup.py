@@ -20,7 +20,8 @@ setup(
         'pytz==2024.2',
         'requests==2.32.3',
         'pandas==2.2.3',
-        'httpx==0.27.2'
+        'httpx==0.27.2',
+        'catboost==1.2.7'
     ],
     entry_points={
         'console_scripts': [
