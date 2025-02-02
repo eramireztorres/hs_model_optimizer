@@ -1,299 +1,236 @@
-Here's the updated version of your prompt with a concise addition to ensure the LLM provides only the load_model function:
+**Input:**
 
-You are provided with the following Python model that implements a machine learning classifier:
+You have the following information:
 
+**1. Current Model (Python code):**
+<<<
 {current_model_code}
+>>>
 
-Classification metrics for this model are: {metrics_str}
+**2. Classification Metrics for This Model:**
+<<<
+{metrics_str}
+>>>
 
-Previous models and their performance metrics are: {history_str}
+**3. Previous Models and Their Performance Metrics:**
+<<<
+{history_str}
+>>>
 
-Additional Information: {extra_info}
+**4. Additional Information:**
+<<<
+{extra_info}
+>>>
 
-Task:
-Based on the given model and its performance, suggest improvements. Your response must only include a single Python function named load_model that defines the model and returns it. Ensure all necessary imports are included within the function. Do not include any explanations, markdown formatting, or extra code outside of this function.
-In the suggested improvements, you may either:
-    - Change the model to a different classifier or ensemble.
-    - Slightly modify the hyperparameters of the current model, especially if the metrics are already high.
-    - Propose a custom loss function to address the additional information (e.g., class imbalance, noisy labels).
-    - Focus on improving underperforming classes based on their precision, recall, or F1 score.
-    
-**Example 1** (Strong Metrics, Small Hyperparameter Change):
-Previous Model:
+**Task:**  
+Propose an improved machine learning classifier by either:
+- Changing or combining different model(s) early on (especially if we have had fewer than ~5 improvements so far or if the current model might not be optimal),
+- Refining hyperparameters if metrics are already high or if we have already tried several different architectures,
+- Adapting the loss function or handling imbalance/noisy labels if indicated,
+- Focusing on the underperforming class(es) based on precision, recall, or F1.
+
+Your solution must meet these conditions:
+1. **Output exactly one Python function** named `load_model` that defines and returns the improved model.
+2. **Include all necessary imports** inside that function.
+3. **Do not provide any additional explanations, markdown, or code** outside the `load_model` function.
+
+**Important**:
+- Always propose at least one modification from any previous model. Never output the exact same code.
+- **If you have made 2–3 small hyperparameter changes to the same library (e.g., XGBoost) without improving the best known accuracy, precision, recall, or F1, try a different classifier (e.g., LightGBM, CatBoost) or propose an ensemble.**
+- If switching libraries or using a new approach 1–2 times does not improve upon the best metrics, you may revert to the best approach but use a broader hyperparameter range, a custom loss, or an ensemble.
+- Avoid random micro-tweaks if they do not improve results.
+
+
+**Output:**
+Provide only the Python code for the improved `load_model` function.
+
+---
+  
+### **Examples**
+
+Below are shortened examples demonstrating how the model might be changed or tuned under different scenarios. The outputs are always single functions named `load_model`, containing all imports and no extra text.
+
+---
+
+**Example 1 (High Metrics → Slight Hyperparameter Adjustment)**
+
+Previous Model and Metrics:
+<<<
+Accuracy: 0.936, Precision: 0.937, Recall: 0.936, F1: 0.936  
+Model Code:
 def load_model():
     from sklearn.ensemble import ExtraTreesClassifier
     return ExtraTreesClassifier(n_estimators=1200, max_depth=60, min_samples_split=2, min_samples_leaf=1)
-
-Metrics:
-    Global:
-        Accuracy: 0.936
-        Precision: 0.937
-        Recall: 0.936
-        F1 Score: 0.936
-    Per-Class:
-        Precision per class: [0.94, 0.92]
-        Recall per class: [0.93, 0.92]
-        F1 Score per class: [0.935, 0.92]
-
-Extra Info:
-Not available
+>>>
 
 Suggested Improvement:
 def load_model():
     from sklearn.ensemble import ExtraTreesClassifier
     return ExtraTreesClassifier(n_estimators=1600, max_depth=70, min_samples_split=4, min_samples_leaf=2)
 
+---
 
-**Example 2** (Switch to XGBoost for Improved Performance):
-Previous Model:
+**Example 2 (Moderate Performance → Switch Model)**
+
+Previous Model and Metrics:
+<<<
+Accuracy: 0.92, Precision: 0.92, Recall: 0.92, F1: 0.92  
+Model Code:
 def load_model():
     from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(n_estimators=800, max_depth=50, min_samples_split=2, min_samples_leaf=1)
-
-Metrics:
-    Global:
-        Accuracy: 0.92
-        Precision: 0.92
-        Recall: 0.92
-        F1 Score: 0.92
-    Per-Class:
-        Precision per class: [0.95, 0.89]
-        Recall per class: [0.90, 0.94]
-        F1 Score per class: [0.92, 0.91]
-
-Extra Info:
-Not available
+    return RandomForestClassifier(n_estimators=800, max_depth=50)
+>>>
 
 Suggested Improvement:
 def load_model():
     from xgboost import XGBClassifier
     return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05, subsample=0.8)
 
+---
 
-**Example 3** (Class Imbalance with Underperforming Class):
-Previous Model:
+**Example 3 (Class Imbalance → Use scale_pos_weight)**
+
+Previous Model and Metrics:
+<<<
+Global Accuracy: 0.85  
+Per-Class Precision: [0.90, 0.60], Recall: [0.92, 0.50], F1: [0.91, 0.55]  
+Model Code:
 def load_model():
     from sklearn.ensemble import ExtraTreesClassifier
-    return ExtraTreesClassifier(n_estimators=1200, max_depth=60, min_samples_split=2, min_samples_leaf=1)
-
-Metrics:
-    Global:
-        Accuracy: 0.85
-        Precision: 0.80
-        Recall: 0.78
-        F1 Score: 0.79
-    Per-Class:
-        Precision per class: [0.90, 0.60]
-        Recall per class: [0.92, 0.50]
-        F1 Score per class: [0.91, 0.55]
-
-Extra Info:
-Binary classification problem with a class imbalance: there are 4 times more instances of class 0 than class 1.
-
-Suggested Improvement:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=1000, max_depth=10, learning_rate=0.1, scale_pos_weight=4, reg_alpha=0.2, eval_metric='auc')
-
-**Example 4** (Noisy Labels):
-Previous Model:
-def load_model():
-    from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(n_estimators=800, max_depth=50, min_samples_split=2, min_samples_leaf=1)
-
-Metrics:
-    Global:
-        Accuracy: 0.92
-        Precision: 0.92
-        Recall: 0.92
-        F1 Score: 0.92
-    Per-Class:
-        Precision per class: [0.90, 0.94]
-        Recall per class: [0.88, 0.96]
-        F1 Score per class: [0.89, 0.95]
-
-Extra Info:
-There are doubts about the accuracy of some class labels. It is suspected that up to 15% of the labels might be noisy or incorrect.
-
-Suggested Improvement:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=800, max_depth=10, learning_rate=0.1, gamma=0.5, subsample=0.8, reg_alpha=0.3, reg_lambda=0.3)
-
-**Example 5** (Class Imbalance and Noisy Labels):
-Previous Model:
-def load_model():
-    from sklearn.ensemble import ExtraTreesClassifier
-    return ExtraTreesClassifier(n_estimators=1000, max_depth=40)
-
-Metrics:
-    Global:
-        Accuracy: 0.89
-        Precision: 0.88
-        Recall: 0.85
-        F1 Score: 0.86
-    Per-Class:
-        Precision per class: [0.90, 0.75]
-        Recall per class: [0.88, 0.60]
-        F1 Score per class: [0.89, 0.67]
-
-Extra Info:
-Class imbalance is present, with class 0 being 3 times more frequent than class 1. Additionally, there are concerns about the accuracy of some labels.
-
-Suggested Improvement:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=500, max_depth=15, learning_rate=0.05, scale_pos_weight=3, eval_metric='auc', gamma=0.5, reg_lambda=0.2, subsample=0.85)
-
-**Example 6** (Custom Huber Loss Function for Outliers):
-Previous Model:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05)
-
-Metrics:
-	Global:
-	    Accuracy: 0.89
-	    Precision: 0.88
-	    Recall: 0.85
-	    F1 Score: 0.86
-	Per-Class:
-	    Precision per class: [0.90, 0.75]
-	    Recall per class: [0.88, 0.60]
-	    F1 Score per class: [0.89, 0.67]
-
-Extra Info: There are several outliers in the data affecting the model’s performance, particularly in Class 1. We want to reduce the impact of these outliers and improve the performance of Class 1.
-
-Suggested Improvement:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=600, max_depth=12, learning_rate=0.03, subsample=0.85, reg_alpha=0.2, objective='reg:squaredlogerror')
-
-** Example 7 ** (Improvement Based on Performance Evolution Across Multiple Models):
-
-Previous Model 1:
-def load_model():
-    from sklearn.linear_model import LogisticRegression
-    return LogisticRegression(C=1.0, max_iter=100)
-
-Metrics for Model 1:
-    Global:
-        Accuracy: 0.82
-        Precision: 0.80
-        Recall: 0.78
-        F1 Score: 0.79
-    Per-Class:
-        Precision per class: [0.85, 0.75]
-        Recall per class: [0.88, 0.68]
-        F1 Score per class: [0.86, 0.71]
-
-Previous Model 2:
-def load_model():
-    from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(n_estimators=500, max_depth=30, min_samples_split=4, min_samples_leaf=2)
-
-Metrics for Model 2:
-    Global:
-        Accuracy: 0.88
-        Precision: 0.87
-        Recall: 0.85
-        F1 Score: 0.86
-    Per-Class:
-        Precision per class: [0.90, 0.84]
-        Recall per class: [0.92, 0.78]
-        F1 Score per class: [0.91, 0.81]
-
-Previous Model 3:
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=400, max_depth=10, learning_rate=0.05, scale_pos_weight=2)
-
-Metrics for Model 3:
-    Global:
-        Accuracy: 0.90
-        Precision: 0.89
-        Recall: 0.88
-        F1 Score: 0.88
-    Per-Class:
-        Precision per class: [0.92, 0.86]
-        Recall per class: [0.93, 0.83]
-        F1 Score per class: [0.92, 0.84]
-
-Extra Info:
-    The target dataset shows a moderate class imbalance (class 1 is twice as frequent as class 0).
-    Performance improvement is needed for the minority class (class 0), as its recall has remained lower compared to the majority class in all three models.
-    The model has consistently improved overall, but there is a diminishing return in precision and recall gains after switching to XGBoost (Model 3).
+    return ExtraTreesClassifier(n_estimators=1200, max_depth=60)
+>>>
 
 Suggested Improvement:
 def load_model():
     from xgboost import XGBClassifier
     return XGBClassifier(
-        n_estimators=600,          # Increase number of estimators
-        max_depth=12,              # Slightly deeper tree to capture more complex patterns
-        learning_rate=0.03,        # Lower learning rate for fine-tuning
-        subsample=0.85,            # Subsample to prevent overfitting
-        colsample_bytree=0.8,      # Reduce tree feature sampling to improve generalization
-        scale_pos_weight=2.5,      # Adjust further for class imbalance
-        gamma=0.3,                 # Introduce regularization to control overfitting
-        eval_metric='auc',         # Use AUC to monitor model performance during training
-        early_stopping_rounds=50   # Stop training if no improvement in AUC after 50 rounds
+        n_estimators=1000,
+        max_depth=10,
+        learning_rate=0.1,
+        scale_pos_weight=4,  # Handling imbalance
+        reg_alpha=0.2,
+        eval_metric='auc'
     )
 
-** Example 7 **  (Using LightGBM Based on Model History)
+---
 
-Previous Model 1: Logistic Regression
+**Example 4 (Noisy Labels → Stronger Regularization)**
 
-def load_model():
-    from sklearn.linear_model import LogisticRegression
-    return LogisticRegression(C=1.0, max_iter=100)
-
-Metrics for Model 1:
-    Global Metrics:
-        Accuracy: 0.76
-        Precision: 0.75
-        Recall: 0.74
-        F1 Score: 0.74
-    Per-Class Metrics:
-        Precision per class: [0.78, 0.72]
-        Recall per class: [0.80, 0.68]
-        F1 Score per class: [0.79, 0.70]
-        
-Previous Model 2: Random Forest
+Previous Model and Metrics:
+<<<
+Accuracy: 0.92, Precision: 0.92, Recall: 0.92, F1: 0.92  
+Suspicion of label noise up to 15%.  
+Model Code:
 def load_model():
     from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(n_estimators=300, max_depth=20)
+    return RandomForestClassifier(n_estimators=800, max_depth=50)
+>>>
 
-Metrics for Model 2:
-    Global Metrics:
-        Accuracy: 0.82
-        Precision: 0.81
-        Recall: 0.80
-        F1 Score: 0.80
-    Per-Class Metrics:
-        Precision per class: [0.84, 0.78]
-        Recall per class: [0.85, 0.74]
-        F1 Score per class: [0.84, 0.76]
-        
-Previous Model 3: XGBoost
+Suggested Improvement:
 def load_model():
     from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=500, max_depth=8, learning_rate=0.1, subsample=0.8)
+    return XGBClassifier(
+        n_estimators=800,
+        max_depth=10,
+        learning_rate=0.1,
+        gamma=0.5,
+        subsample=0.8,
+        reg_alpha=0.3,
+        reg_lambda=0.3
+    )
 
-Metrics for Model 3:
-    Global Metrics:
-        Accuracy: 0.86
-        Precision: 0.85
-        Recall: 0.84
-        F1 Score: 0.84
-    Per-Class Metrics:
-        Precision per class: [0.88, 0.82]
-        Recall per class: [0.87, 0.80]
-        F1 Score per class: [0.87, 0.81]
+---
 
-Extra Info:
-        The dataset contains moderate class imbalance, with class 0 being 60% of the data and class 1 being 40%.
+**Example 5 (Imbalance + Noisy Labels → Adjust Weight + Regularization)**
 
-Suggested Improvement
+Previous Model and Metrics:
+Accuracy: 0.89, Precision: 0.88, Recall: 0.85, F1: 0.86  
+Class 1 is 3x less frequent than Class 0, some labels may be incorrect.  
+Model Code:
+def load_model():
+    from sklearn.ensemble import ExtraTreesClassifier
+    return ExtraTreesClassifier(n_estimators=1000, max_depth=40)
+
+Suggested Improvement:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(
+        n_estimators=500,
+        max_depth=15,
+        learning_rate=0.05,
+        scale_pos_weight=3,
+        eval_metric='auc',
+        gamma=0.5,
+        reg_lambda=0.2,
+        subsample=0.85
+    )
+
+---
+
+**Example 6 (Many Outliers → Custom or Alternative Loss)**
+
+Previous Model and Metrics:
+<<<
+Accuracy: 0.89, Precision: 0.88, Recall: 0.85, F1: 0.86  
+Model Code:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.05)
+>>>
+
+Suggested Improvement:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(
+        n_estimators=600,
+        max_depth=12,
+        learning_rate=0.03,
+        subsample=0.85,
+        reg_alpha=0.2,
+        objective='reg:squaredlogerror'
+    )
+
+---
+
+**Example 7 (Selecting the Best Previous Model & Further Tuning)**
+
+Previous Models and Metrics:
+1. LogisticRegression → Accuracy: 0.82
+2. RandomForest → Accuracy: 0.88
+3. XGBoost → Accuracy: 0.90
+
+Extra Info:  
+Moderate class imbalance. The minority class recall remains lower. Overall performance improved, but gains are slowing.
+
+Suggested Improvement:
+def load_model():
+    from xgboost import XGBClassifier
+    return XGBClassifier(
+        n_estimators=600,
+        max_depth=12,
+        learning_rate=0.03,
+        subsample=0.85,
+        colsample_bytree=0.8,
+        scale_pos_weight=2.5,
+        gamma=0.3,
+        eval_metric='auc',
+        early_stopping_rounds=50
+    )
+---
+
+**Example 8 (Trying LightGBM After XGBoost Plateaus)**
+
+Previous Models and Metrics:
+<<<
+1. LogisticRegression (Acc 0.76)
+2. RandomForest (Acc 0.82)
+3. XGBoost (Acc 0.86)
+>>>
+
+Extra Info:  
+Class 0 ~60%, Class 1 ~40%. We want to see if LightGBM can outperform XGBoost.
+
+Suggested Improvement:
 def load_model():
     from lightgbm import LGBMClassifier
     return LGBMClassifier(
@@ -303,72 +240,23 @@ def load_model():
         num_leaves=31,
         subsample=0.8,
         colsample_bytree=0.8,
-        scale_pos_weight=1.5,  # Balances class weights
+        scale_pos_weight=1.5,
         boosting_type='gbdt'
     )
 
-** Example 7 **  (Stacked Model Using XGBoost and LightGBM)
-Previous Model 1: Logistic Regression
+---
 
-def load_model():
-    from sklearn.linear_model import LogisticRegression
-    return LogisticRegression(C=1.0, max_iter=100)
+**Example 9 (Stacking Multiple Models)**
 
-Metrics for Model 1:
+Previous Models and Metrics:
+<<<
+1. LogisticRegression (Acc 0.72)
+2. RandomForest (Acc 0.80)
+3. XGBoost (Acc 0.84)
+>>>
 
-    Global Metrics:
-        Accuracy: 0.72
-        Precision: 0.70
-        Recall: 0.68
-        F1 Score: 0.69
-    Per-Class Metrics:
-        Precision per class: [0.75, 0.65]
-        Recall per class: [0.78, 0.58]
-        F1 Score per class: [0.76, 0.61]
-
-Previous Model 2: Random Forest
-
-def load_model():
-    from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(n_estimators=200, max_depth=20)
-
-Metrics for Model 2:
-
-    Global Metrics:
-        Accuracy: 0.80
-        Precision: 0.78
-        Recall: 0.76
-        F1 Score: 0.77
-    Per-Class Metrics:
-        Precision per class: [0.83, 0.73]
-        Recall per class: [0.85, 0.70]
-        F1 Score per class: [0.84, 0.71]
-
-Previous Model 3: XGBoost
-
-def load_model():
-    from xgboost import XGBClassifier
-    return XGBClassifier(n_estimators=500, max_depth=10, learning_rate=0.1, subsample=0.8)
-
-Metrics for Model 3:
-
-    Global Metrics:
-        Accuracy: 0.84
-        Precision: 0.83
-        Recall: 0.82
-        F1 Score: 0.82
-    Per-Class Metrics:
-        Precision per class: [0.87, 0.79]
-        Recall per class: [0.88, 0.76]
-        F1 Score per class: [0.87, 0.77]
-
-Extra Info
-
-    The dataset has imbalanced classes, with class 1 representing 30% of the data and class 0 representing 70%.
-    Features include a mix of numerical and high-cardinality categorical features.
-    The dataset size is large (200,000 samples), necessitating efficient training and prediction times.
-    The majority class (class 0) consistently outperforms the minority class (class 1), particularly in recall and F1 score.
-    Both XGBoost and Random Forest showed improvements over Logistic Regression, but performance gains are plateauing, especially for the minority class.
+Extra Info:  
+Imbalanced data, large dataset (200k samples), numeric + high-cardinality categorical features. Gains are plateauing.
 
 Suggested Improvement:
 def load_model():
@@ -379,30 +267,46 @@ def load_model():
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
     
-    # Define base models
     base_models = [
         ('xgb', XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, subsample=0.8)),
         ('lgbm', LGBMClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, subsample=0.8))
     ]
-    
-    # Define the meta-learner
     meta_learner = Pipeline([
-        ('scaler', StandardScaler()),  # Scale features for Logistic Regression
+        ('scaler', StandardScaler()),
         ('lr', LogisticRegression(C=1.0, max_iter=200))
     ])
+    model = StackingClassifier(estimators=base_models, final_estimator=meta_learner, cv=5)
+    return model
+---
+
+Use these examples as a guide for creating your own improvement. Always return only a single load_model function with all imports, no extra text, and no explanations.
+
+Important: Your response must:
+
+    Define a single Python function named load_model with no other explanations or code.
+    Include all necessary imports inside that function (e.g., from sklearn.ensemble import StackingClassifier), so the code can run as is.
+
+Below is an example to illustrate the format clearly:
+
+def load_model():
+    from sklearn.ensemble import StackingClassifier
+    from sklearn.linear_model import LogisticRegression
+    from xgboost import XGBClassifier
+    from lightgbm import LGBMClassifier
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
     
-    # Build the stacking classifier
-    model = StackingClassifier(
-        estimators=base_models,
-        final_estimator=meta_learner,
-        cv=5  # Use 5-fold cross-validation for stacking
-    )
+    base_models = [
+        ('xgb', XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, subsample=0.8)),
+        ('lgbm', LGBMClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, subsample=0.8))
+    ]
+    meta_learner = Pipeline([
+        ('scaler', StandardScaler()),
+        ('lr', LogisticRegression(C=1.0, max_iter=200))
+    ])
+    model = StackingClassifier(estimators=base_models, final_estimator=meta_learner, cv=5)
     return model
 
-Please ensure all necessary imports are included within the function.
-Provide only executable Python code for the improved model without any comments, explanations, or markdown formatting.
-
-Output:
-Provide only the improved Python code that can replace the current model.
-
+Use this format as a guide.
+Suggested Improvement:
 

@@ -4,7 +4,7 @@ Return ONLY the corrected code with proper indentation.
 Do not add explanations or comments.
 
 Requirements:
-1. The code must define and return a model (e.g., XGBRegressor, RandomForestClassifier, etc.).
+1. The code must define and return a model (e.g., XGBRegressor, RandomForestClassifier, etc.). You may not change the model type: if it is classification, the correction must be classification; if it is regression, the correction must be regression.
 2. All necessary imports must be inside the `load_model()` function.
 3. No extra code or imports are allowed outside the `load_model()` function.
 
@@ -14,13 +14,13 @@ $error_msg
 Faulty Code:
 $faulty_code
 
-Examples of valid final code:
+Examples of valid final classification code:
 
 def load_model():
     from sklearn.ensemble import RandomForestClassifier
     return RandomForestClassifier(n_estimators=100)
 
-or
+or regression code:
 
 def load_model():
     from xgboost import XGBRegressor
@@ -37,16 +37,14 @@ Example 1:
 Faulty Code:
 
 ```python
-def load_model(): 
-	from xgboost import XGBRegressor 
-	model = XGBRegressor(n_estimators=50, max_depth=3) 
-
+def load_model():
+	from lightgbm import LGBMClassifier
+	model = LGBMClassifier(num_leaves=31, max_depth=-1, n_estimators=200, learning_rate=0.1)
 
 Corrected Code:
-
-def load_model(): 
-	from xgboost import XGBRegressor 
-	model = XGBRegressor(n_estimators=50, max_depth=3) 
+def load_model():
+	from lightgbm import LGBMClassifier
+	model = LGBMClassifier(num_leaves=31, max_depth=-1, n_estimators=200, learning_rate=0.1)
 	return model
 
 Example 2:
@@ -54,8 +52,7 @@ Example 2:
 Faulty Code:
 from xgboost import XGBRegressor # Import is outside the function
 def load_model(): 
-    model = XGBRegressor(n_estimators=50, max_depth=3) 
-    return model
+    return XGBRegressor(n_estimators=50, max_depth=3) 
 
 
 Corrected Code:
