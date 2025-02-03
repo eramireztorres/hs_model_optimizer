@@ -21,7 +21,9 @@ setup(
         'requests==2.32.3',
         'pandas==2.2.3',
         'httpx==0.27.2',
-        'catboost==1.2.7'
+        'catboost==1.2.7',
+        'streamlit==1.41.1'
+        
     ],
     entry_points={
         'console_scripts': [
