@@ -62,6 +62,43 @@ To use Llama, Gemini or other models with OpenRouter, follow these steps:
      setx OPENROUTER_API_KEY "your_openrouter_api_key_here"
      ```
 
+## Run the App with Web UI
+
+You can run the application using a user-friendly Streamlit web interface, which allows easy configuration of model optimization parameters without using the command line.
+
+### Launching the Web UI
+
+1. Ensure all dependencies are installed as per the installation steps.
+2. Run the following command to launch the Streamlit app:
+
+```bash
+streamlit run app.py
+```
+
+This will open the application in your default web browser.
+
+### Features of the Web UI
+
+- **API Key Management**: Input your OpenAI and/or OpenRouter API key directly within the interface. Keys are stored as environment variables for subsequent runs.
+- **File Upload**: Drag and drop `.joblib` or `.csv` files for input, or specify a directory path.
+- **Parameter Configuration**: Easily adjust optimization parameters such as model type, iterations, and output paths.
+- **Run Optimization**: Execute the model optimization process directly from the interface.
+- **Real-Time Output**: View live console output from the optimization process within the web UI.
+
+### Example Workflow
+
+1. Open the web app by running:
+   ```bash
+   streamlit run app.py
+   ```
+2. Input your API keys in the sidebar if they are not already set.
+3. Upload your dataset (`.joblib` or `.csv`), or specify a directory.
+4. Adjust the optimization parameters as needed.
+5. Click **Run Optimization** to start the process.
+6. Monitor the console output in real-time on the right-hand panel.
+
+---
+
 ## Run the App as CLI with Options
 
 You can run the `hs_optimize` command-line interface (CLI) with several options for customizing the optimization process.  
@@ -163,4 +200,5 @@ In this case, the application will pass the additional information to the LLM, w
 
 ## License
 [MIT](LICENSE)
+
 
