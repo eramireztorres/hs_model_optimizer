@@ -90,7 +90,34 @@ def run_cli_with_output(data_path, args_dict, output_placeholder):
     st.success("Optimization completed!")
 
 
-# Function to construct full paths for history and output models
+def construct_full_paths(history_file_path, output_models_path, input_data_folder, directory_path=None, uploaded_files=None):
+    def is_base_filename(path):
+        return os.path.basename(path) == path
+
+    # If directory_path is provided, use it
+    if directory_path:
+        base_dir = directory_path
+    # If the file was uploaded, use the 'outputs' folder
+    elif uploaded_files:
+        base_dir = os.path.join(os.getcwd(), "outputs")
+        os.makedirs(base_dir, exist_ok=True)
+    # Otherwise, use the input data folder (for browsed files)
+    else:
+        base_dir = input_data_folder
+
+    # Construct full paths if only base filenames are provided
+    if is_base_filename(history_file_path):
+        history_file_path = os.path.join(base_dir, history_file_path)
+
+    # Return None if output_models_path is None or empty
+    if not output_models_path or output_models_path.strip() == "":
+        output_models_path = None
+    elif is_base_filename(output_models_path):
+        output_models_path = os.path.join(base_dir, output_models_path)
+
+    return history_file_path, output_models_path
+
+
 # def construct_full_paths(history_file_path, output_models_path, input_data_folder, directory_path=None):
 #     def is_base_filename(path):
 #         return os.path.basename(path) == path
@@ -106,33 +133,13 @@ def run_cli_with_output(data_path, args_dict, output_placeholder):
 #     if is_base_filename(history_file_path):
 #         history_file_path = os.path.join(base_dir, history_file_path)
 
-#     if is_base_filename(output_models_path):
+#     # Return None if output_models_path is None or empty
+#     if not output_models_path or output_models_path.strip() == "":
+#         output_models_path = None
+#     elif is_base_filename(output_models_path):
 #         output_models_path = os.path.join(base_dir, output_models_path)
 
 #     return history_file_path, output_models_path
-
-def construct_full_paths(history_file_path, output_models_path, input_data_folder, directory_path=None):
-    def is_base_filename(path):
-        return os.path.basename(path) == path
-
-    # If directory_path is provided, use it; otherwise, use input_data_folder
-    base_dir = directory_path if directory_path else input_data_folder
-
-    if not base_dir:
-        base_dir = os.path.join(os.getcwd(), "outputs")  # Default outputs directory
-        os.makedirs(base_dir, exist_ok=True)
-
-    # Construct full paths if only base filenames are provided
-    if is_base_filename(history_file_path):
-        history_file_path = os.path.join(base_dir, history_file_path)
-
-    # Return None if output_models_path is None or empty
-    if not output_models_path or output_models_path.strip() == "":
-        output_models_path = None
-    elif is_base_filename(output_models_path):
-        output_models_path = os.path.join(base_dir, output_models_path)
-
-    return history_file_path, output_models_path
 
 
 # Function to save uploaded files to a temporary directory
@@ -168,9 +175,8 @@ with left_col:
 
 
     if uploaded_files:
-        st.success(f"{len(uploaded_files)} file(s) uploaded.")
-        for file in uploaded_files:
-            st.write(f"📄 {file.name}")
+        st.success("1 file uploaded.")  # Always 1 file if uploaded_files is not None
+        st.write(f"📄 {uploaded_files.name}")
     elif directory_path:
         if os.path.isdir(directory_path):
             st.success(f"Directory selected: {directory_path}")
@@ -178,6 +184,7 @@ with left_col:
             st.error("Invalid directory path. Please enter a valid path.")
     else:
         st.info("Please upload at least one file or enter a directory path.")
+
 
     st.header("⚙️ Configure Optimization Parameters")
 
@@ -199,8 +206,8 @@ with right_col:
     output_placeholder = st.empty()
 
     if st.button("Run Optimization"):
-        if uploaded_files and len(uploaded_files) == 1:
-            saved_files = save_uploaded_files(uploaded_files)
+        if uploaded_files:
+            saved_files = save_uploaded_files([uploaded_files])  # Wrap in list to reuse the same function
             data_path = saved_files[0]
             input_data_folder = os.path.dirname(data_path)
         elif directory_path:
@@ -210,12 +217,22 @@ with right_col:
             st.error("Please upload a file or enter a directory path before running.")
             st.stop()
 
+
+        # history_file_path, output_models_path = construct_full_paths(
+        #     history_file_path,
+        #     output_models_path,
+        #     input_data_folder,
+        #     directory_path
+        # )
+        
         history_file_path, output_models_path = construct_full_paths(
             history_file_path,
             output_models_path,
             input_data_folder,
-            directory_path
+            directory_path,
+            uploaded_files  # Pass uploaded_files to detect if the file is from Streamlit's temp dir
         )
+
 
         st.write(f"Output file path: {history_file_path}")
 
@@ -226,7 +243,7 @@ with right_col:
             'history_file_path': history_file_path,
             'iterations': iterations,
             'extra_info': extra_info,
-            'is_regression': is_regression,
+            'is_regression': is_regression.lower(), 
             'metrics_source': metrics_source,
             'error_model': error_model
         }
