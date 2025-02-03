@@ -72,6 +72,7 @@ You can run the application using a user-friendly Streamlit web interface, which
 2. Run the following command to launch the Streamlit app:
 
 ```bash
+cd web_ui
 streamlit run app.py
 ```
 
