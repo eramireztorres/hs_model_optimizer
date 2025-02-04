@@ -243,10 +243,12 @@ with right_col:
             'history_file_path': history_file_path,
             'iterations': iterations,
             'extra_info': extra_info,
-            'is_regression': is_regression.lower(), 
             'metrics_source': metrics_source,
             'error_model': error_model
         }
+        
+        if is_regression != 'None':
+            args_dict['is_regression'] = is_regression.lower()
         
         # Only add 'output_models_path' if it's provided
         if output_models_path:
