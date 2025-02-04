@@ -159,6 +159,16 @@ class DataLoader:
                 print(f"Encoding categorical columns: {list(categorical_cols)}")
                 X_train = DataLoader._encode_categorical(X_train, categorical_cols)
                 X_test = DataLoader._encode_categorical(X_test, categorical_cols, fit=False)
+                
+                
+            if y_train.dtype == 'object' or isinstance(y_train.iloc[0], str):
+                print("Encoding categorical target labels in y_train.")
+                y_train = pd.factorize(y_train)[0]
+            
+            if y_test.dtype == 'object' or isinstance(y_test.iloc[0], str):
+                print("Encoding categorical target labels in y_test.")
+                y_test = pd.factorize(y_test)[0]
+
             
             data = {
                 'X_train': X_train.to_numpy(),
@@ -262,26 +272,6 @@ class DataLoader:
         else:
             raise ValueError("Input data must contain either ('X_train', 'y_train', 'X_test', 'y_test') or ('X', 'y').")
     
-    # @staticmethod
-    # def _handle_csv_file(file_path):
-    #     """
-    #     Load data from a CSV file. If the columns 'X' and 'y' are present, use them. 
-    #     Otherwise, assume the last column is the target ('y') and all preceding columns are features ('X').
-    #     """
-    #     df = pd.read_csv(file_path)
-    
-    #     # Check if 'X' and 'y' are explicitly labeled
-    #     if 'X' in df.columns and 'y' in df.columns:
-    #         X = df.drop('y', axis=1).to_numpy()
-    #         y = df['y'].to_numpy()
-    #     else:
-    #         # Assume the last column is the target and all preceding columns are features
-    #         X = df.iloc[:, :-1].to_numpy()  # All columns except the last
-    #         y = df.iloc[:, -1].to_numpy()   # Last column
-    
-    #     return DataLoader._split_data(X, y)
-  
-    
     @staticmethod
     def _handle_csv_file(file_path):
         df = pd.read_csv(file_path)
@@ -290,6 +280,11 @@ class DataLoader:
         target_col = df.columns[-1]
         X = df.drop(columns=[target_col])
         y = df[target_col]
+        
+        # Handle categorical target encoding if necessary
+        if y.dtype == 'object' or isinstance(y.iloc[0], str):
+            print("Encoding categorical target labels.")
+            y = pd.factorize(y)[0]  # Encode string labels as integers
         
         # Fill missing numerical values with the median
         for col in X.select_dtypes(include=['number']).columns:
@@ -312,7 +307,71 @@ class DataLoader:
         
         # Instead of splitting, return the unsplit data along with a flag.
         # return {'X': X, 'y': y, 'is_pre_split': False}
-        return {'X': X.to_numpy(), 'y': y.to_numpy(), 'is_pre_split': False}
+        return {'X': X if isinstance(X, np.ndarray) else X.to_numpy(), 'y': y if isinstance(y, np.ndarray) else y.to_numpy(), 'is_pre_split': False}
+    
+    # @staticmethod
+    # def _handle_csv_file(file_path):
+    #     df = pd.read_csv(file_path)
+        
+    #     # Identify target column (last column assumed to be the target)
+    #     target_col = df.columns[-1]
+    #     X = df.drop(columns=[target_col])
+    #     y = df[target_col]
+        
+    #     # Handle categorical target encoding if necessary
+    #     if y.dtype == 'object' or isinstance(y.iloc[0], str):
+    #         print("Encoding categorical target labels.")
+    #         y = pd.factorize(y)[0]  # Encode string labels as integers
+        
+    #     # Standard preprocessing for features
+    #     for col in X.select_dtypes(include=['number']).columns:
+    #         X[col] = X[col].fillna(X[col].median())
+        
+    #     categorical_cols = X.select_dtypes(include=['object']).columns
+    #     if len(categorical_cols) > 0:
+    #         print(f"Encoding categorical columns: {list(categorical_cols)}")
+    #         X = DataLoader._encode_categorical(X, categorical_cols)
+        
+    #     # Standardize numeric features
+    #     scaler = StandardScaler()
+    #     X_scaled = scaler.fit_transform(X)
+        
+    #     return {'X': X_scaled, 'y': y if isinstance(y, np.ndarray) else y.to_numpy(), 'is_pre_split': False}
+
+
+  
+    
+    # @staticmethod
+    # def _handle_csv_file(file_path):
+    #     df = pd.read_csv(file_path)
+        
+    #     # Identify target column (last column assumed to be the target)
+    #     target_col = df.columns[-1]
+    #     X = df.drop(columns=[target_col])
+    #     y = df[target_col]
+        
+    #     # Fill missing numerical values with the median
+    #     for col in X.select_dtypes(include=['number']).columns:
+    #         X[col] = X[col].fillna(X[col].median())
+        
+    #     # Identify and encode categorical features
+    #     categorical_cols = X.select_dtypes(include=['object']).columns
+    #     if len(categorical_cols) > 0:
+    #         print(f"Encoding categorical columns: {list(categorical_cols)}")
+    #         X = DataLoader._encode_categorical(X, categorical_cols)
+        
+    #     # Standardize numeric values
+    #     X.fillna(0, inplace=True)
+    #     X = X.astype('float32')
+    #     X.replace([np.inf, -np.inf], np.nan, inplace=True)
+    #     X.fillna(0, inplace=True)
+    #     scaler = StandardScaler()
+    #     X_scaled = scaler.fit_transform(X)
+    #     X = pd.DataFrame(X_scaled, columns=X.columns)
+        
+    #     # Instead of splitting, return the unsplit data along with a flag.
+    #     # return {'X': X, 'y': y, 'is_pre_split': False}
+    #     return {'X': X.to_numpy(), 'y': y.to_numpy(), 'is_pre_split': False}
 
     # @staticmethod
     # def _handle_csv_file(file_path):
