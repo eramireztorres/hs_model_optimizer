@@ -46,6 +46,26 @@ Or in windows:
 setx OPENAI_API_KEY "your_openai_api_key_here"
 ```
 
+## Gemini API Key Setup
+
+To use Gemini models, you must set your Gemini API Key as an environment variable. Choose one of the methods below:
+
+### For Linux or macOS
+Open your terminal and run:
+```bash
+export GEMINI_API_KEY="your_gemini_api_key_here"
+```
+To make this change persistent, add the following line to your `~/.bashrc` (or equivalent shell configuration file):
+```bash
+echo 'export GEMINI_API_KEY="your_gemini_api_key_here"' >> ~/.bashrc
+```
+
+### For Windows
+Open Command Prompt and run:
+```cmd
+setx GEMINI_API_KEY "your_gemini_api_key_here"
+```
+
 ### Other Models via OpenRouter
 
 To use Llama, Gemini or other models with OpenRouter, follow these steps:
