@@ -20,42 +20,53 @@ def set_env_variable(key, value):
 # Load existing environment variables if they exist
 existing_openai_key = os.getenv("OPENAI_API_KEY", "")
 existing_openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-
+existing_gemini_key = os.getenv("GEMINI_API_KEY", "")  # New for Gemini
 
 st.set_page_config(
     page_title="HS Model Optimizer",
-    page_icon="🚀",  # Example: rocket emoji as favicon
+    page_icon="🚀",
     layout="wide"
 )
 
-# Sidebar for API Key settings
 st.sidebar.header("⚙️ API Key Settings")
 
 # Input for OpenAI API Key (pre-populated if already set)
 openai_api_key = st.sidebar.text_input(
     "Enter your OpenAI API Key:",
-    value=existing_openai_key if existing_openai_key else "",
+    value=existing_openai_key,
     type="password"
 )
+
+
+# New: Input for Gemini API Key (pre-populated if already set)
+gemini_api_key = st.sidebar.text_input(
+    "Enter your Gemini API Key:",
+    value=existing_gemini_key,
+    type="password"
+)
+
 
 # Input for OpenRouter API Key (pre-populated if already set)
 openrouter_api_key = st.sidebar.text_input(
     "Enter your OpenRouter API Key:",
-    value=existing_openrouter_key if existing_openrouter_key else "",
+    value=existing_openrouter_key,
     type="password"
 )
+
+
 
 # Button to save API keys
 if st.sidebar.button("Save API Keys"):
     if openai_api_key:
         set_env_variable("OPENAI_API_KEY", openai_api_key)
         st.sidebar.success("OpenAI API Key saved successfully!")
-
     if openrouter_api_key:
         set_env_variable("OPENROUTER_API_KEY", openrouter_api_key)
         st.sidebar.success("OpenRouter API Key saved successfully!")
-
-    if not openai_api_key and not openrouter_api_key:
+    if gemini_api_key:
+        set_env_variable("GEMINI_API_KEY", gemini_api_key)
+        st.sidebar.success("Gemini API Key saved successfully!")
+    if not (openai_api_key or openrouter_api_key or gemini_api_key):
         st.sidebar.warning("Please enter at least one API key to save.")
 
 
