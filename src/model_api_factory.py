@@ -1,5 +1,6 @@
 from openai_model_api import OpenAIModelAPI
 from llama_model_api import LlamaModelAPI
+from gemini_model_api import GeminiModelAPI
 
 class ModelAPIFactory:
     """
@@ -17,10 +18,16 @@ class ModelAPIFactory:
         'o1-': 'openai',
         'o3-': 'openai',
         'llama': 'llama',
-        'google': 'google',
         'gemini': 'google',
         'deepseek': 'deepseek',
-        
+        'cognitivecomputations/': 'openrouter',
+        'google/': 'openrouter',
+        'mistralai/': 'openrouter',
+        'qwen/': 'openrouter',
+        'meta-llama/': 'openrouter',
+        'deepseek/': 'openrouter',
+        'nvidia/': 'openrouter',
+        'microsoft/': 'openrouter'
     }
 
     @classmethod
@@ -74,5 +81,6 @@ class ModelAPIFactory:
 # Register the models with the factory
 ModelAPIFactory.register_model('openai', OpenAIModelAPI)
 ModelAPIFactory.register_model('llama', LlamaModelAPI)
-ModelAPIFactory.register_model('google', LlamaModelAPI)
+ModelAPIFactory.register_model('google', GeminiModelAPI)
 ModelAPIFactory.register_model('deepseek', LlamaModelAPI)
+ModelAPIFactory.register_model('openrouter', LlamaModelAPI)

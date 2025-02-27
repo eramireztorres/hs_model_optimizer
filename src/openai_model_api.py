@@ -1,5 +1,19 @@
 import os
+# import openai
+
 import openai
+from openai._base_client import SyncHttpxClientWrapper
+
+_old_init = SyncHttpxClientWrapper.__init__
+
+def new_init(self, *args, **kwargs):
+    kwargs.pop("proxies", None)
+    return _old_init(self, *args, **kwargs)
+
+SyncHttpxClientWrapper.__init__ = new_init
+
+
+
 from base_model_api import BaseModelAPI
 
 class OpenAIModelAPI(BaseModelAPI):
