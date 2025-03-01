@@ -48,9 +48,9 @@ setx OPENAI_API_KEY "your_openai_api_key_here"
 
 You can export API keys for other model providers in a similar way by using the corresponding environment variable names:
 
--**Gemini**: Use GEMINI_API_KEY.
--**Anthropic**: Use ANTHROPIC_API_KEY.
--**OpenRouter**: Use OPENROUTER_API_KEY.
+- **Gemini**: Use GEMINI_API_KEY
+- **Anthropic**: Use ANTHROPIC_API_KEY
+- **OpenRouter**: Use OPENROUTER_API_KEY
 
 ## Run the App with Web UI
 
