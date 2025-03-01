@@ -1,6 +1,7 @@
 from openai_model_api import OpenAIModelAPI
 from llama_model_api import LlamaModelAPI
 from gemini_model_api import GeminiModelAPI
+from anthropic_model_api import AnthropicModelAPI
 
 class ModelAPIFactory:
     """
@@ -17,8 +18,9 @@ class ModelAPIFactory:
         'gpt-4o-mini': 'openai',
         'o1-': 'openai',
         'o3-': 'openai',
-        'llama': 'llama',
+        'llama': 'meta',
         'gemini': 'google',
+        'claude': 'anthropic',
         'deepseek': 'deepseek',
         'cognitivecomputations/': 'openrouter',
         'google/': 'openrouter',
@@ -80,7 +82,8 @@ class ModelAPIFactory:
 
 # Register the models with the factory
 ModelAPIFactory.register_model('openai', OpenAIModelAPI)
-ModelAPIFactory.register_model('llama', LlamaModelAPI)
+ModelAPIFactory.register_model('meta', LlamaModelAPI)
 ModelAPIFactory.register_model('google', GeminiModelAPI)
+ModelAPIFactory.register_model('anthropic', AnthropicModelAPI)
 ModelAPIFactory.register_model('deepseek', LlamaModelAPI)
 ModelAPIFactory.register_model('openrouter', LlamaModelAPI)

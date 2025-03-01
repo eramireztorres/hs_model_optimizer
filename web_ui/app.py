@@ -20,7 +20,9 @@ def set_env_variable(key, value):
 # Load existing environment variables if they exist
 existing_openai_key = os.getenv("OPENAI_API_KEY", "")
 existing_openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-existing_gemini_key = os.getenv("GEMINI_API_KEY", "")  # New for Gemini
+existing_gemini_key = os.getenv("GEMINI_API_KEY", "") 
+existing_anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+
 
 st.set_page_config(
     page_title="HS Model Optimizer",
@@ -45,6 +47,13 @@ gemini_api_key = st.sidebar.text_input(
     type="password"
 )
 
+# New: Input for Gemini API Key (pre-populated if already set)
+anthropic_api_key = st.sidebar.text_input(
+    "Enter your Anthropic API Key:",
+    value=existing_anthropic_key,
+    type="password"
+)
+
 
 # Input for OpenRouter API Key (pre-populated if already set)
 openrouter_api_key = st.sidebar.text_input(
@@ -52,7 +61,6 @@ openrouter_api_key = st.sidebar.text_input(
     value=existing_openrouter_key,
     type="password"
 )
-
 
 
 # Button to save API keys
@@ -66,7 +74,10 @@ if st.sidebar.button("Save API Keys"):
     if gemini_api_key:
         set_env_variable("GEMINI_API_KEY", gemini_api_key)
         st.sidebar.success("Gemini API Key saved successfully!")
-    if not (openai_api_key or openrouter_api_key or gemini_api_key):
+    if anthropic_api_key:
+        set_env_variable("ANTHROPIC_API_KEY", anthropic_api_key)
+        st.sidebar.success("Anthropic API Key saved successfully!")
+    if not (openai_api_key or openrouter_api_key or gemini_api_key or anthropic_api_key):
         st.sidebar.warning("Please enter at least one API key to save.")
 
 
