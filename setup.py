@@ -30,7 +30,7 @@ setup(
     'xgboost==2.1.1',
     'joblib==1.4.2',
     'openai==1.47.0',      # Upgraded from 1.45.0
-    'lightgbm==4.5.0',
+    'lightgbm>=4.6.0',
     'pytz==2024.2',
     'requests==2.32.3',
     'pandas==2.2.3',
