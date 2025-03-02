@@ -10,7 +10,6 @@ from model_trainer import ModelTrainer, RegressionModelTrainer
 from llm_improver import LLMImprover,LLMRegressionImprover
 from model_history_manager import ModelHistoryManager
 from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
-from gpt import Gpt4AnswerGenerator
 from model_api_factory import ModelAPIFactory
 from data_loader import DataLoader  
 from llm_code_cleaner import LLMCodeCleaner
@@ -819,21 +818,4 @@ def is_regression(y_train):
     return np.issubdtype(y_train.dtype, np.floating) or np.issubdtype(y_train.dtype, np.integer) and not np.all(np.equal(np.mod(y_train, 1), 0))
 
 
-
-
-if __name__ == "__main__":
-    
-    api_key = os.getenv('OPENAI_API_KEY')
-    generator = Gpt4AnswerGenerator(api_key, model='gpt-4o')
-    
-    llm_improver = LLMImprover(generator, model_history=None)
-    
-    history_file_path = 'skdata_model_history.joblib'
-    train_data_file = 'classification_data.joblib'
- 
-    
-    iterations = 5
-    
-    controller = MainController(train_data_file, llm_improver, history_file_path)
-    controller.run(iterations=iterations)
 
