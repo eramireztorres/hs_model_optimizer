@@ -27,7 +27,7 @@ class AnthropicModelAPI(BaseModelAPI):
         """
         return os.getenv("ANTHROPIC_API_KEY")
     
-    def get_response(self, prompt, max_tokens=300, temperature=0.7, stop_sequences=None):
+    def get_response(self, prompt, max_tokens=8000, temperature=0.7, stop_sequences=None):
         """
         Get a response from the Anthropic model using the Messages API.
         
@@ -59,12 +59,14 @@ class AnthropicModelAPI(BaseModelAPI):
             # Store in conversation history if needed
             self.conversation_history.append({"role": "assistant", "content": completion})
             
+            print(f'Claude response: {response}')
+            
             return completion
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
     
-    def continue_conversation(self, new_prompt, max_tokens=200000, temperature=0.7, stop_sequences=None):
+    def continue_conversation(self, new_prompt, max_tokens=12000, temperature=0.7, stop_sequences=None):
         """
         Continue a conversation with the model by sending the entire conversation history.
         
