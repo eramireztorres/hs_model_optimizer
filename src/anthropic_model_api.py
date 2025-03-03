@@ -59,8 +59,6 @@ class AnthropicModelAPI(BaseModelAPI):
             # Store in conversation history if needed
             self.conversation_history.append({"role": "assistant", "content": completion})
             
-            print(f'Claude response: {response}')
-            
             return completion
         except Exception as e:
             print(f"An error occurred: {e}")
