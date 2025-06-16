@@ -147,6 +147,7 @@ class MainController:
             from sklearn.model_selection import train_test_split
     
         try:
+            print(f'ITERATIONS: {iterations}')
             for iteration in range(iterations):
                 print(f"\n=== Iteration {iteration + 1} ===")
     
@@ -228,8 +229,21 @@ class MainController:
                 
                 
                 if model is None:
-                    logging.error(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
-                    print(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    # logging.error(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    # print(f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    # continue
+
+                    logging.error(
+                        f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+                    print(
+                        f"Exceeded maximum retries ({max_retries}) for iteration {iteration + 1}. Skipping iteration.")
+
+                    current_model_code = self._get_dynamic_model_code()
+                    simplified_error = self._simplify_error(error_msg)
+                    metrics = {"error": simplified_error}
+                    self.history_manager.save_model_history(current_model_code, metrics)
+                    self.llm_improver.log_model_history(current_model_code, metrics)
+                    last_valid_model_code = current_model_code
                     continue
     
                 print(f"Model for iteration {iteration + 1}: {model.__class__.__name__}")
@@ -245,8 +259,34 @@ class MainController:
                 )
     
                 # Train and evaluate the model
-                self.model_trainer.train_model()
-                metrics = self.model_trainer.evaluate_model()
+                # self.model_trainer.train_model()
+                # metrics = self.model_trainer.evaluate_model()
+                
+                try:
+                    self.model_trainer.train_model()
+                    metrics = self.model_trainer.evaluate_model()
+                except Exception as e:
+                    simplified_error = self._simplify_error(e)
+                    logging.error(f"Training or evaluation failed: {simplified_error}")
+                    print(f"Training or evaluation failed: {simplified_error}")
+                    metrics = {"error": simplified_error}
+            
+                    current_model_code = self._get_dynamic_model_code()
+                    self.history_manager.save_model_history(current_model_code, metrics)
+                    self.llm_improver.log_model_history(current_model_code, metrics)
+            
+                    improved_code = self.llm_improver.get_model_suggestions(
+                        current_model_code, metrics, extra_info=self.extra_info
+                    )
+                    if improved_code:
+                        cleaner = LLMCodeCleaner()
+                        improved_code = cleaner.clean_code(improved_code)
+                        self.dynamic_updater.update_model_code(improved_code)
+                    else:
+                        logging.warning("No improvements suggested by the LLM in this iteration.")
+            
+                    last_valid_model_code = current_model_code
+                    continue
     
                 print(f"Metrics for iteration {iteration + 1}: {metrics}")
     
@@ -283,7 +323,11 @@ class MainController:
                     self.dynamic_updater.update_model_code(improved_code)
                 else:
                     logging.warning("No improvements suggested by the LLM in this iteration.")
-                    print("No improvements suggested by the LLM in this iteration.")
+                    print(f"No improvements suggested by the LLM in iteration {iteration}.")
+                    
+                print(f'FINISHED ITERATION {iteration}')
+                    
+            
     
         finally:
             if original_model_code:
