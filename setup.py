@@ -29,7 +29,7 @@ setup(
     'scikit-learn==1.5.2',
     'xgboost==2.1.1',
     'joblib==1.4.2',
-    'openai==1.47.0',      # Upgraded from 1.45.0
+    'openai>=1.47.0',      # Upgraded from 1.45.0
     'lightgbm>=4.6.0',
     'pytz==2024.2',
     'requests==2.32.3',
@@ -37,8 +37,10 @@ setup(
     'httpx==0.28.1',       # Required by google-genai
     'catboost==1.2.7',
     'streamlit==1.41.1',
-    'google-genai==1.3.0',
-    'anthropic==0.49.0'
+     'litellm>=1.65.3',
+    'google-genai>=1.3.0',
+    'anthropic==0.49.0',
+     'google-adk>=0.1.0'
 
         
     ],

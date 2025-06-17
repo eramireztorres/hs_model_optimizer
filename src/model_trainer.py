@@ -3,6 +3,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 # import xgboost as xgb
 import joblib
+from inspect import signature
 
 class ModelTrainer:
     def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):
@@ -15,21 +16,66 @@ class ModelTrainer:
 
     def train_model(self):
         """
-        Train the model on the provided training data, with optional validation data for early stopping if supported.
+        Train the model on the provided training data, with optional
+        validation data for early stopping if supported, and disable
+        any verbose outputs if possible.
         """
         if self.model is None:
             raise ValueError("No model provided for training.")
 
-        X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
+        # 1. Split out a small validation set
+        X_train, X_val, y_train, y_val = train_test_split(
+            self.X_train, self.y_train,
+            test_size=0.2,
+            random_state=42
+        )
+        
+        # Ensure CatBoost models do not fail due to mismatched class_weights
+        self._ensure_valid_class_weights(self.model, y_train)
 
-        if hasattr(self.model, 'fit'):
-            fit_params = {}
-            if 'eval_set' in self.model.fit.__code__.co_varnames:
-                fit_params['eval_set'] = [(X_val, y_val)]
+        # 2. Try to disable verbosity at the parameter level
+        for param, value in [('verbose', False), ('verbosity', -1)]:
+            try:
+                # will raise if the model doesn't have that param
+                self.model.set_params(**{param: value})
+            except (ValueError, TypeError):
+                pass
 
-            self.model.fit(X_train, y_train, **fit_params)
-        else:
-            raise ValueError("The provided model does not support the fit method.") 
+        # 3. Build fit parameters dynamically based on fit signature
+        fit_params = {}
+        sig = signature(self.model.fit).parameters
+
+        # add eval_set if supported
+        if 'eval_set' in sig:
+            fit_params['eval_set'] = [(X_val, y_val)]
+
+        # turn off any in-fit verbosity if supported
+        if 'verbose' in sig:
+            fit_params['verbose'] = False
+
+        # if using XGBoost, you might also want to turn off
+        # `early_stopping_rounds` logs etc., but verbose=False usually covers it
+
+        # 4. Fit the model
+        self.model.fit(X_train, y_train, **fit_params)
+
+    # def train_model(self):
+    #     """
+    #     Train the model on the provided training data, with optional validation data for early stopping if supported.
+    #     """
+    #     if self.model is None:
+    #         raise ValueError("No model provided for training.")
+
+    #     X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
+
+    #     if hasattr(self.model, 'fit'):
+    #         fit_params = {}
+    #         if 'eval_set' in self.model.fit.__code__.co_varnames:
+    #             fit_params['eval_set'] = [(X_val, y_val)]
+
+    #         self.model.fit(X_train, y_train, **fit_params)
+    #     else:
+    #         raise ValueError("The provided model does not support the fit method.") 
     
     # def train_model(self):
     #     """
@@ -90,7 +136,26 @@ class ModelTrainer:
         """
         self.model = joblib.load(filepath)
         
-        
+
+    def _ensure_valid_class_weights(self, model, y):
+        """Recursively adjust CatBoost class_weights if mismatched."""
+        try:
+            from catboost import CatBoostClassifier
+        except ImportError:
+            CatBoostClassifier = None
+
+        if CatBoostClassifier and isinstance(model, CatBoostClassifier):
+            weights = getattr(model, 'class_weights', None)
+            if weights is not None:
+                n_classes = len(set(y))
+                if len(weights) != n_classes:
+                    model.set_params(class_weights=None, auto_class_weights='Balanced')
+
+        if hasattr(model, 'estimators') and isinstance(model.estimators, list):
+            for _, est in model.estimators:
+                self._ensure_valid_class_weights(est, y)
+        elif hasattr(model, 'base_estimator'):
+            self._ensure_valid_class_weights(model.base_estimator, y)
 
 class RegressionModelTrainer:
     def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):

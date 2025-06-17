@@ -54,7 +54,7 @@ Since there are outliers, use XGBRegressor with Huber loss to reduce the influen
 def load_model():
     from xgboost import XGBRegressor
     return XGBRegressor(n_estimators=500, max_depth=10, learning_rate=0.05, objective='reg:squaredlogerror')
-
+    
 Explanation:
 Huber loss is a robust loss function that combines the benefits of L2 loss for small errors and L1 loss for large errors. This makes the model more robust to outliers in the dataset.
 
