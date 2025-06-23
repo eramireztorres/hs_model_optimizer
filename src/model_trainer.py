@@ -22,6 +22,9 @@ class ModelTrainer:
 
         X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
 
+        # Ensure CatBoost models do not fail due to mismatched class_weights
+        self._ensure_valid_class_weights(self.model, y_train)
+
         if hasattr(self.model, 'fit'):
             fit_params = {}
             if 'eval_set' in self.model.fit.__code__.co_varnames:
@@ -89,6 +92,26 @@ class ModelTrainer:
         Load a trained model from a joblib file.
         """
         self.model = joblib.load(filepath)
+
+    def _ensure_valid_class_weights(self, model, y):
+        """Recursively adjust CatBoost class_weights if mismatched."""
+        try:
+            from catboost import CatBoostClassifier
+        except ImportError:
+            CatBoostClassifier = None
+
+        if CatBoostClassifier and isinstance(model, CatBoostClassifier):
+            weights = getattr(model, 'class_weights', None)
+            if weights is not None:
+                n_classes = len(set(y))
+                if len(weights) != n_classes:
+                    model.set_params(class_weights=None, auto_class_weights='Balanced')
+
+        if hasattr(model, 'estimators') and isinstance(model.estimators, list):
+            for _, est in model.estimators:
+                self._ensure_valid_class_weights(est, y)
+        elif hasattr(model, 'base_estimator'):
+            self._ensure_valid_class_weights(model.base_estimator, y)
         
         
 

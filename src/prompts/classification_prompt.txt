@@ -277,6 +277,27 @@ def load_model():
     ])
     model = StackingClassifier(estimators=base_models, final_estimator=meta_learner, cv=5)
     return model
+
+**Example 10 (CatBoost with Automatic Class Weights)**
+
+Previous Models and Metrics:
+<<<
+1. LightGBM (Acc 0.85)
+2. XGBoost (Acc 0.86)
+>>>
+
+Extra Info:
+Three classes with imbalance. Manually specified class weights caused errors.
+
+Suggested Improvement:
+def load_model():
+    from catboost import CatBoostClassifier
+    return CatBoostClassifier(
+        iterations=500,
+        depth=6,
+        learning_rate=0.1,
+        auto_class_weights='Balanced'
+    )
 ---
 
 Use these examples as a guide for creating your own improvement. Always return only a single load_model function with all imports, no extra text, and no explanations.
