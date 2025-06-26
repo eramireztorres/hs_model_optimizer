@@ -24,7 +24,8 @@ class MainController:
                  is_regression_bool=None, extra_info="Not available", output_models_path=None,
                  metrics_source="validation",
                  error_model: str = None,
-                 error_prompt_path: str = None):
+                 error_prompt_path: str = None,
+                 initial_model_path: str = None):
         """
         Initialize the MainController.
 
@@ -39,6 +40,14 @@ class MainController:
         self.joblib_file_path = joblib_file_path
         self.history_manager = ModelHistoryManager(history_file_path=history_file_path)
         self.is_regression = is_regression_bool
+        if initial_model_path:
+            try:
+                with open(initial_model_path, 'r') as f:
+                    init_code = f.read()
+                updater = DynamicRegressionModelUpdater() if is_regression_bool else DynamicModelUpdater()
+                updater.update_model_code(init_code)
+            except Exception as e:
+                print(f"Warning: could not load initial model from {initial_model_path}: {e}")
         self.data = self._load_data()
         self.extra_info = extra_info
         self.model_trainer = None        
@@ -807,6 +816,13 @@ class MainController:
         except Exception as e:
             logging.error(f"Failed to backup original model: {e}")
             return None
+
+    def _simplify_error(self, error) -> str:
+        """
+        Simplify exception/error message to a single-line string.
+        """
+        msg = str(error)
+        return msg.splitlines()[-1] if msg else ''
 
 
     

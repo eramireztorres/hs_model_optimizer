@@ -35,7 +35,7 @@ setup(
     'requests==2.32.3',
     'pandas==2.2.3',
     'httpx==0.28.1',       # Required by google-genai
-    'catboost==1.2.7',
+    'catboost>=1.2.7',
     'streamlit==1.41.1',
      'litellm>=1.65.3',
     'google-genai>=1.3.0',

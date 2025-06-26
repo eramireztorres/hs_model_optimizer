@@ -33,13 +33,10 @@ class ModelTrainer:
         # Ensure CatBoost models do not fail due to mismatched class_weights
         self._ensure_valid_class_weights(self.model, y_train)
 
-        # 2. Try to disable verbosity at the parameter level
-        for param, value in [('verbose', False), ('verbosity', -1)]:
-            try:
-                # will raise if the model doesn't have that param
-                self.model.set_params(**{param: value})
-            except (ValueError, TypeError):
-                pass
+        # 2. Recursively disable verbosity on the model and any nested estimators or pipeline steps
+        from verbosity_suppressor import VerbositySuppressor
+
+        VerbositySuppressor.suppress(self.model)
 
         # 3. Build fit parameters dynamically based on fit signature
         fit_params = {}

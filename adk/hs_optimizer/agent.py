@@ -315,10 +315,12 @@ def run_hs_optimize(
     is_regression: Optional[str] = None,
     metrics_source: Optional[str] = None,
     error_model: Optional[str] = None,
-    quiet: bool = True
+    initial_model_path: Optional[str] = None,
+    quiet: bool = True,
 ) -> Dict[str, Any]:
     """
-    Invoke the hs_optimize CLI with provided parameters.
+    Invoke the hs_optimize CLI with provided parameters, including an optional
+    initial model code path for seeding the first iteration.
 
     Builds the command, runs subprocess, and captures output.
     Emits warnings on non-zero exit codes but does not raise.
@@ -353,6 +355,8 @@ def run_hs_optimize(
         cmd += ['--metrics-source', metrics_source]
     if error_model is not None:
         cmd += ['--error-model', error_model]
+    if initial_model_path is not None:
+        cmd += ['--initial-model-path', initial_model_path]
 
     try:
         proc = subprocess.run(
