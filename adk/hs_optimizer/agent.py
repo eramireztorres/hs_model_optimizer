@@ -1,5 +1,5 @@
-import pandas as pd
 import os
+import pandas as pd
 import warnings
 import joblib
 from typing import Optional, List, Dict, Any, Callable
@@ -264,7 +264,9 @@ def read_model_history_tool():
 
 
 # Default LLM for code generation
-DEFAULT_MODEL = LiteLlm(model="openai/gpt-4.1-mini")
+DEFAULT_MODEL = LiteLlm(
+    model=os.environ.get("LLM_MODEL", "openai/gpt-5-nano")
+)
 
 # --- SUB-AGENT: Model Code Generator ---
 # Generates Python code files defining a load_model function per CLI contract
