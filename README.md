@@ -188,8 +188,22 @@ hs_optimize -d my_classification_data.joblib -hfp classification_history.txt -i 
 ```
 
 In this case, the application will pass the additional information to the LLM, which can then suggest using custom loss functions or class weighting techniques to address the class imbalance.
+## Natural Language Interaction with the ADK Team
+
+In addition to the CLI and Streamlit web UI workflows, you can interact in natural language with the ADK team implemented in the `adk` folder. To get started, navigate to the `adk` directory and run:
+
+```bash
+cd adk
+adk web
+```
+
+This launches a web-based chat interface where you can communicate with the ADK team. Note that this workflow currently supports only OpenAI models, so you **must** set the `OPENAI_API_KEY` environment variable:
+
+```bash
+export OPENAI_API_KEY='your_openai_api_key_here'
+```
+
+Unlike the CLI and Streamlit UI, which support LLM models from any vendor, the ADK team integration only works with OpenAI models.
 
 ## License
 [MIT](LICENSE)
-
-
