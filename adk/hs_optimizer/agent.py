@@ -10,67 +10,112 @@ import subprocess
 from google.adk.agents import Agent
 
 
-def fix_csv_target_column(
-    input_csv_path: str,
+def fix_target_column(
+    input_path: str,
     target_column: Optional[str] = None,
-    output_csv_path: Optional[str] = None
+    output_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Ensure the target column is the last column for hs_optimize.
 
     Steps:
-    1. Load the CSV from `input_csv_path`.
+    1. Load the file from `input_path` (CSV or Excel).
     2. Determine `target_column`: if `None`, use the last column; if an integer string, interpret as column index.
     3. Reorder columns so that the target is last.
-    4. Write the fixed CSV to `output_csv_path` (overwrites original if None).
+    4. Write the fixed data to `output_path` (overwrites original if None).
     5. Return metadata including row count, feature names, and column types.
     """
-    # Load CSV
-    df = pd.read_csv(input_csv_path)
+    was_read_as_csv = False
+    try:
+        # Load CSV or Excel
+        ext = os.path.splitext(input_path)[1].lower()
+        if ext == '.csv':
+            df = pd.read_csv(input_path)
+            was_read_as_csv = True
+        elif ext in ['.xls', '.xlsx']:
+            try:
+                engine = 'xlrd' if ext == '.xls' else 'openpyxl'
+                df = pd.read_excel(input_path, engine=engine)
+            except Exception as e:
+                warnings.warn(f"Could not read Excel file ({e}), attempting to read as CSV.")
+                df = pd.read_csv(input_path)
+                was_read_as_csv = True
+        else:
+            # Try to read as CSV as a last resort for files with no extension or unknown extension
+            try:
+                df = pd.read_csv(input_path)
+                was_read_as_csv = True
+                warnings.warn(f"Unsupported file type '{ext}', but successfully read as CSV.")
+            except Exception as e:
+                 warnings.warn(f"Unsupported file type '{ext}' and failed to read as CSV: {e}")
+                 return {"error": f"Unsupported file type: {ext}"}
 
-    # Infer target column
-    if target_column is None:
-        tc = df.columns[-1]
-    else:
-        try:
-            idx = int(target_column)
-            tc = df.columns[idx]
-        except (ValueError, KeyError, IndexError):
-            tc = str(target_column)
+        # Infer target column
+        if target_column is None:
+            tc = df.columns[-1]
+        else:
+            try:
+                idx = int(target_column)
+                tc = df.columns[idx]
+            except (ValueError, KeyError, IndexError):
+                tc = str(target_column)
 
-    if tc not in df.columns:
-        warnings.warn(
-            f"Target column '{tc}' not found in CSV columns {list(df.columns)}. "
-            f"Defaulting to last column '{df.columns[-1]}'."
-        )
-        tc = df.columns[-1]
+        if tc not in df.columns:
+            warnings.warn(
+                f"Target column '{tc}' not found in columns {list(df.columns)}. "
+                f"Defaulting to last column '{df.columns[-1]}'."
+            )
+            tc = df.columns[-1]
 
-    # Reorder columns: features first, then target
-    features = [c for c in df.columns if c != tc]
-    ordered_cols = features + [tc]
-    df = df[ordered_cols]
+        # Reorder columns: features first, then target
+        features = [c for c in df.columns if c != tc]
+        ordered_cols = features + [tc]
+        df = df[ordered_cols]
 
-    # Write output
-    if output_csv_path is None:
-        output_csv_path = input_csv_path
-    os.makedirs(os.path.dirname(output_csv_path) or '.', exist_ok=True)
-    df.to_csv(output_csv_path, index=False)
+        # Write output
+        final_output_path = output_path
+        if final_output_path is None:
+            if was_read_as_csv:
+                # If we read a mis-named file as CSV, save it as CSV
+                final_output_path = os.path.splitext(input_path)[0] + '.csv'
+            else:
+                final_output_path = input_path
+        
+        os.makedirs(os.path.dirname(final_output_path) or '.', exist_ok=True)
+        
+        output_ext = os.path.splitext(final_output_path)[1].lower()
+        if was_read_as_csv or output_ext == '.csv':
+            df.to_csv(final_output_path, index=False)
+        elif output_ext in ['.xls', '.xlsx']:
+            # Writing to .xls is deprecated and might require another library.
+            # Let's default to .xlsx if .xls is requested for writing.
+            if output_ext == '.xls':
+                warnings.warn("Writing to .xls format is deprecated. Saving as .xlsx instead.")
+                final_output_path = os.path.splitext(final_output_path)[0] + '.xlsx'
+            df.to_excel(final_output_path, index=False, engine='openpyxl')
+        else:
+            # If no extension on output path, assume csv
+            df.to_csv(final_output_path, index=False)
 
-    # Prepare metadata
-    metadata: Dict[str, Any] = {
-        "fixed_csv": output_csv_path,
-        "n_rows": int(df.shape[0]),
-        "n_features": int(len(features)),
-        "feature_columns": features,
-        "target_column": tc,
-        "column_types": {col: str(df[col].dtype) for col in df.columns},
-    }
-    return metadata
+
+        # Prepare metadata
+        metadata: Dict[str, Any] = {
+            "fixed_path": final_output_path,
+            "n_rows": int(df.shape[0]),
+            "n_features": int(len(features)),
+            "feature_columns": features,
+            "target_column": tc,
+            "column_types": {col: str(df[col].dtype) for col in df.columns},
+        }
+        return metadata
+
+    except Exception as e:
+        warnings.warn(f"An unexpected error occurred in fix_target_column: {e}")
+        return {"error": str(e)}
 
 
-# Register as a FunctionTool for the root agent
-def fix_csv_target_column_tool():
-    return FunctionTool(func=fix_csv_target_column)
+def fix_target_column_tool():
+    return FunctionTool(func=fix_target_column)
 
 
 
@@ -103,8 +148,12 @@ def split_dataset(
         df = joblib.load(input_path)
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"Loaded object from {input_path} is not a pandas DataFrame.")
-    else:
+    elif ext == '.csv':
         df = pd.read_csv(input_path)
+    elif ext in ['.xls', '.xlsx']:
+        df = pd.read_excel(input_path)
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
 
     # Determine output format
     fmt = output_format or ( 'joblib' if ext == '.joblib' else 'csv' )
@@ -399,12 +448,13 @@ root_agent = Agent(
         "preprocess input, split data if requested, run optimization, "
         "analyze results, and optionally generate new model code."
     ),
-    instruction="""
-You are the HsOptimizeCoordinator. Given a user request to optimize a model, follow these steps:
+    instruction="""You are the HsOptimizeCoordinator. Given a user request to optimize a model, follow these steps:
 
-1. **Ensure input is ready**  
-   - If the user provided a single CSV, call `fix_csv_target_column` to reorder the target to the last column.  
-   - If the user provided pre-split Joblib or CSVs, skip this.
+1. **Ensure input is ready**
+   - The `hs_optimize` command expects the target column to be the last column in the dataset.
+   - If the user provides a dataset file (like CSV or Excel) and either explicitly asks to prepare the file OR specifies a target column by name or index, you should use the `fix_target_column` tool. This tool will place the target column at the end and return the path to the corrected file.
+   - If the user doesn't specify a target column, you can assume the provided file is already correctly formatted and pass it directly to `run_hs_optimize`.
+   - If the user provided pre-split Joblib or CSVs, you can also skip this step.
 
 2. **Optional custom split**  
    - If the user specified `partition_specs`, invoke `split_dataset` with their specs to produce `X_train`, `y_train`, `X_test`, `y_test`.  
@@ -427,7 +477,7 @@ You are the HsOptimizeCoordinator. Given a user request to optimize a model, fol
 Use these tools if needed. Always confirm critical arguments before invoking a tool.
 """,
     tools=[
-        fix_csv_target_column_tool(),
+        fix_target_column_tool(),
         split_dataset_tool(),
         run_hs_optimize_tool(),
         read_model_history_tool(),

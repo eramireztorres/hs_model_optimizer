@@ -1,5 +1,8 @@
+import sklearn
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import mean_squared_error, r2_score
+
+sklearn.set_config(enable_metadata_routing=True)
 from sklearn.model_selection import train_test_split
 # import xgboost as xgb
 import joblib
@@ -175,10 +178,33 @@ class RegressionModelTrainer:
 
         if hasattr(self.model, 'fit'):
             fit_params = {}
-            if 'eval_set' in self.model.fit.__code__.co_varnames:
+            # Use signature for robustness
+            sig = signature(self.model.fit)
+            if 'eval_set' in sig.parameters:
                 fit_params['eval_set'] = [(X_val, y_val)]
 
-            self.model.fit(X_train, y_train, **fit_params)
+            try:
+                self.model.fit(X_train, y_train, **fit_params)
+            except Exception as e:
+                if "Metric Huber requires delta as parameter" in str(e) or "unexpected argument(s) {'delta'}" in str(e):
+                    from sklearn.ensemble import VotingRegressor
+                    if isinstance(self.model, VotingRegressor):
+                        # Find the catboost estimator and add delta for it
+                        catboost_name = None
+                        for name, est in self.model.estimators:
+                            if 'CatBoostRegressor' in str(type(est)):
+                                catboost_name = name
+                                break
+                        if catboost_name:
+                            fit_params[f'{catboost_name}__delta'] = 1.0
+                            self.model.fit(X_train, y_train, **fit_params)
+                        else:
+                            raise e
+                    else:
+                        fit_params['delta'] = 1.0
+                        self.model.fit(X_train, y_train, **fit_params)
+                else:
+                    raise e
         else:
             raise ValueError("The provided model does not support the fit method.")
 
