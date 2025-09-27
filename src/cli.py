@@ -2,6 +2,37 @@ from typing import Literal
 
 import sys
 import os
+import atexit
+
+# Suppress noisy multiprocessing ResourceTracker errors at interpreter shutdown.
+# Some sklearn/joblib backends may spawn processes that trigger
+# ChildProcessError in ResourceTracker.__del__ when exiting.
+try:
+    from multiprocessing import resource_tracker as _rt
+    from multiprocessing.resource_tracker import ResourceTracker as _RTClass
+
+    def _safe_stop_resource_tracker():
+        try:
+            # Best-effort stop; ignore if it's already gone.
+            _rt._resource_tracker._stop()
+        except Exception:
+            pass
+
+    # Ensure this runs before Python tears down modules
+    atexit.register(_safe_stop_resource_tracker)
+
+    # Also harden the ResourceTracker.__del__ against spurious ChildProcessError
+    _orig_del = getattr(_RTClass, "__del__", None)
+    if _orig_del is not None:
+        def _safe_del(self):
+            try:
+                _orig_del(self)
+            except Exception:
+                # Ignore shutdown-time tracker errors
+                pass
+        _RTClass.__del__ = _safe_del
+except Exception:
+    pass
 sys.path.append(os.path.dirname(__file__))
 
 from cli_decorator import cli_decorator
@@ -23,6 +54,13 @@ def select_model_cli(data,
                      error_model: str = None,
                      initial_model_path: str = None,
                      ):
+    import multiprocessing
+    if __name__ == "__main__":
+        try:
+            multiprocessing.set_start_method("spawn")
+        except RuntimeError:
+            pass # start method can only be set once
+
     """
     Command-line interface function for selecting and running an optimization model.
     This function loads the input data, initializes the optimization controller, 

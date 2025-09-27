@@ -334,10 +334,11 @@ class MainController:
                     logging.warning("No improvements suggested by the LLM in this iteration.")
                     print(f"No improvements suggested by the LLM in iteration {iteration}.")
                     
-                print(f'FINISHED ITERATION {iteration}')
+                print(f'FINISHED ITERATION {iteration + 1}')
                     
             
-    
+        except ChildProcessError:
+            pass # Ignore this error, as it is likely caused by a library that uses multiprocessing
         finally:
             if original_model_code:
                 self.dynamic_updater.update_model_code(original_model_code)
