@@ -186,8 +186,8 @@ with left_col:
     st.header("📂 Upload Data Files")
 
     uploaded_files = st.file_uploader(
-        "Drag and drop or browse your file (.joblib, .csv). If not provided, multiple csv files will be read from directory path.",
-        type=["joblib", "csv"],
+        "Drag and drop or browse your file (.joblib, .csv, .xls, .xlsx). If not provided, multiple csv files will be read from directory path.",
+        type=["joblib", "csv", "xls", "xlsx"],
         accept_multiple_files=False
     )
 
