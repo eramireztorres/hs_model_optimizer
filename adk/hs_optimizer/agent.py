@@ -2,12 +2,36 @@ import os
 import pandas as pd
 import warnings
 import joblib
+import re
 from typing import Optional, List, Dict, Any, Callable
-from google.adk.agents import LlmAgent
-from google.adk.tools import FunctionTool, agent_tool
+from google.adk.agents import LlmAgent, ToolContext
+from google.adk.tools import FunctionTool, agent_tool, BaseTool
 from google.adk.models.lite_llm import LiteLlm
 import subprocess
 from google.adk.agents import Agent
+
+
+def run_shell(command: str, workdir: Optional[str] = None, timeout: int = 180) -> Dict[str, Any]:
+    """
+    Runs a shell command. Deletion attempts are blocked by the agent's before_tool_callback.
+    """
+    cwd = workdir or os.getcwd()
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=cwd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+        return {"ok": True, "returncode": proc.returncode, "stdout": proc.stdout, "stderr": proc.stderr}
+    except subprocess.TimeoutExpired as e:
+        return {"ok": False, "returncode": None, "stdout": e.stdout or "", "stderr": f"Timeout: {e}"}
+
+run_shell_tool = FunctionTool(func=run_shell)
 
 
 def fix_target_column(
@@ -440,6 +464,23 @@ def run_hs_optimize(
 def run_hs_optimize_tool():
     return FunctionTool(func=run_hs_optimize)
 
+# ---- Safety callbacks --------------------------------------------------------------
+_DELETE_PATTERNS = re.compile(r"(?:\brm\b|\brmdir\b|\bshred\b|\bdel\b|\btruncate\b)")
+
+def before_tool_guard(
+    tool: BaseTool,
+    args: Dict[str, Any],
+    tool_context: ToolContext,
+    **kwargs,
+) -> Optional[Dict]:
+    """Block destructive shell commands unless explicitly allowed via state flag."""
+    if tool.name == "run_shell":
+        cmd = (args or {}).get("command", "")
+        allow = bool(tool_context.state.get("allow_delete", False))
+        if _DELETE_PATTERNS.search(cmd) and not allow:
+            return {"ok": False, "blocked": True, "reason": "Destructive command requires confirmation", "command": cmd}
+    return None
+
 root_agent = Agent(
     name="HsOptimizeCoordinator",
     model=DEFAULT_MODEL,
@@ -475,6 +516,11 @@ root_agent = Agent(
    - Provide the final `history_file_path`, key metrics, and any generated model code file path.
 
 Use these tools if needed. Always confirm critical arguments before invoking a tool.
+
+**Important Note on `run_shell`:**
+- The `run_shell` tool provides powerful access to the system. Use it with extreme caution.
+- It is intended for tasks like converting files (e.g., from `.txt` to `.csv`) or other data preparation steps that cannot be done with other tools.
+- **You must ask the user for explicit permission before executing any shell command, especially if it could be destructive.** The system has a guard to block some dangerous commands, but you are the first line of defense. Explain what you want to do and why before using the tool.
 """,
     tools=[
         fix_target_column_tool(),
@@ -483,6 +529,8 @@ Use these tools if needed. Always confirm critical arguments before invoking a t
         read_model_history_tool(),
         code_generator_tool,
         save_model_code_tool,
+        run_shell_tool,
     ],
+    before_tool_callback=before_tool_guard,
 )
 
