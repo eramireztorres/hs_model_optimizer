@@ -40,7 +40,7 @@ setup(
      'litellm>=1.65.3',
     'google-genai>=1.3.0',
     'anthropic==0.49.0',
-     'google-adk>=0.1.0',
+     'google-adk',
      'xlsxwriter',
      'xlrd'
 

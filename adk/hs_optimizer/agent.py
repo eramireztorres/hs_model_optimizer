@@ -3,9 +3,9 @@ import pandas as pd
 import warnings
 import joblib
 import re
-from typing import Optional, List, Dict, Any, Callable
-from google.adk.agents import LlmAgent, ToolContext
-from google.adk.tools import FunctionTool, agent_tool, BaseTool
+from typing import Optional, List, Dict, Any, Callable, Literal
+from google.adk.agents import LlmAgent
+from google.adk.tools import FunctionTool, agent_tool, BaseTool, ToolContext
 from google.adk.models.lite_llm import LiteLlm
 import subprocess
 from google.adk.agents import Agent
@@ -381,32 +381,54 @@ save_model_code_tool = FunctionTool(func=save_model_code)
 
 def run_hs_optimize(
     data: str,
-    model: Optional[str] = None,
+    model: Optional[str] = 'gpt-4.1-mini',
     model_provider: Optional[str] = None,
-    history_file_path: Optional[str] = None,
-    iterations: Optional[int] = None,
-    extra_info: Optional[str] = None,
+    history_file_path: Optional[str] = 'model_history.joblib',
+    iterations: Optional[int] = 10,
+    extra_info: Optional[str] = 'Not available',
     output_models_path: Optional[str] = None,
-    is_regression: Optional[str] = None,
-    metrics_source: Optional[str] = None,
+    is_regression: Optional[Literal["true", "false"]] = None,
+    metrics_source: Optional[str] = 'validation',
     error_model: Optional[str] = None,
     initial_model_path: Optional[str] = None,
-    quiet: bool = True,
 ) -> Dict[str, Any]:
     """
-    Invoke the hs_optimize CLI with provided parameters, including an optional
-    initial model code path for seeding the first iteration.
+    Invokes the hs_optimize CLI to run an optimization model.
 
-    Builds the command, runs subprocess, and captures output.
-    Emits warnings on non-zero exit codes but does not raise.
+    This function constructs and executes a command-line call to 'hs_optimize'
+    with the given parameters. It captures the output and returns a dictionary
+    containing the exit code, stdout, stderr, and the history file path.
+
+    Args:
+        data (str): Path to the input dataset. This can be a .joblib file with
+            pre-split data, a folder with .csv files, or a single .csv file.
+        model (str, optional): The LLM model name for generating suggestions.
+            Defaults to 'gpt-4.1-mini'.
+        model_provider (str, optional): The provider of the LLM model. If None,
+            it's inferred from the model name. Defaults to None.
+        history_file_path (str, optional): Path to save the model history.
+            Defaults to 'model_history.joblib'.
+        iterations (int, optional): The number of optimization iterations.
+            Defaults to 10.
+        extra_info (str, optional): Additional context for the LLM.
+            Defaults to 'Not available'.
+        output_models_path (str, optional): Directory to save trained models.
+            If None, models are not saved. Defaults to None.
+        is_regression (Optional[Literal[None, "true", "false"]]): Specifies if
+            the task is regression. Defaults to None.
+        metrics_source (str, optional): The source for evaluation metrics,
+            either 'validation' or 'test'. Defaults to 'validation'.
+        error_model (str, optional): The model to use for error correction.
+            Defaults to None.
+        initial_model_path (str, optional): Path to an initial model to seed
+            the optimization. Defaults to None.
 
     Returns:
-      {
-        'exit_code': int,
-        'stdout': str,
-        'stderr': str,
-        'history_file_path': str  # echo of provided path or default
-      }
+        Dict[str, Any]: A dictionary containing the execution details:
+            - 'exit_code' (int): The exit code of the hs_optimize command.
+            - 'stdout' (str): The standard output.
+            - 'stderr' (str): The standard error.
+            - 'history_file_path' (str): The path to the model history file.
     """
     # Base command
     cmd = ['hs_optimize', '--data', data]
