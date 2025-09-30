@@ -52,7 +52,64 @@ You can export API keys for other model providers in a similar way by using the 
 - **Anthropic**: Use ANTHROPIC_API_KEY
 - **OpenRouter**: Use OPENROUTER_API_KEY
 
-## Run the App with Web UI
+## Quick Start: Choose Your Interaction Method
+
+After installation and exporting your API keys, you can interact with the Model Optimizer in three ways:
+
+- **ADK Chat Interface**: Natural language interaction with the ADK team (requires OpenAI models).
+- **Streamlit Web UI**: User-friendly web interface (supports any vendor's model).
+- **Command Line Interface (CLI)**: Flexible CLI for scripting and automation (supports any vendor's model).
+
+Choose the method that best fits your workflow and refer to the sections below for details.
+
+## Supported Input File Formats
+
+The application supports the following input formats for datasets:
+
+1. **Pre-split `.joblib` file**:
+   A Python dictionary containing the keys:
+   - `X_train`, `y_train` (training data),
+   - `X_test`, `y_test` (test data).
+
+2. **Pre-split `.csv` files**:
+   A directory containing the following files:
+   - `X_train.csv`, `y_train.csv`, `X_test.csv`, and `y_test.csv`.
+
+3. **Unsplit `.joblib` file**:
+   A Python dictionary containing the keys:
+   - `X` (features),
+   - `y` (targets).
+   The application will create a validation split from the data (default split ratio is 80/20).
+
+4. **Unsplit `.csv` files**:
+   A directory containing two files:
+   - `X.csv` (features),
+   - `y.csv` (targets).
+   The application will create a validation split.
+
+5. **Single `.csv` file**:
+   A single CSV file where:
+   - All columns except the last are treated as features (`X`),
+   - The last column is assumed to be the target (`y`).
+
+## ADK Chat Interface
+
+You can interact in natural language with the ADK team implemented in the `adk` folder. To get started, navigate to the `adk` directory and run:
+
+```bash
+cd adk
+adk web
+```
+
+This launches a web-based chat interface where you can communicate with the ADK team. Note that this workflow currently supports only OpenAI models, so you **must** set the `OPENAI_API_KEY` environment variable:
+
+```bash
+export OPENAI_API_KEY='your_openai_api_key_here'
+```
+
+Unlike the CLI and Streamlit Web UI, which support LLM models from any vendor, the ADK Chat Interface only works with OpenAI models.
+
+## Streamlit Web UI
 
 You can run the application using a user-friendly Streamlit web interface, which allows easy configuration of model optimization parameters without using the command line.
 
@@ -90,7 +147,7 @@ This will open the application in your default web browser.
 
 ---
 
-## Run the App as CLI with Options
+## Command Line Interface (CLI)
 
 You can run the `hs_optimize` command-line interface (CLI) with several options for customizing the optimization process.  
 The application supports various input data formats and automatically determines whether the problem is classification or regression based on the target (`y`) values.
@@ -101,35 +158,6 @@ The application supports various input data formats and automatically determines
 hs_optimize [-h] --data DATA [--history-file-path HISTORY_FILE_PATH] [--model MODEL] [--iterations ITERATIONS]
 ```
 
-### Supported Input File Formats
-
-The application supports the following input formats:
-
-1. **Pre-split `.joblib` file**:  
-   A Python dictionary containing the keys:  
-   - `'X_train'`, `'y_train'` (training data),  
-   - `'X_test'`, `'y_test'` (test data).
-
-2. **Pre-split `.csv` files**:  
-   A directory containing the following files:  
-   - `X_train.csv`, `y_train.csv`, `X_test.csv`, and `y_test.csv`.
-
-3. **Unsplit `.joblib` file**:  
-   A Python dictionary containing the keys:  
-   - `'X'` (features),  
-   - `'y'` (targets).  
-   The application will create a validation split from the data (default split ratio is 80/20).
-
-4. **Unsplit `.csv` files**:  
-   A directory containing two files:  
-   - `X.csv` (features),  
-   - `y.csv` (targets).  
-   The application will create a validation split.
-
-5. **Single `.csv` file**:  
-   A single CSV file where:  
-   - All columns except the last are treated as features (`X`),  
-   - The last column is assumed to be the target (`y`).
 
 
 
@@ -188,22 +216,6 @@ hs_optimize -d my_classification_data.joblib -hfp classification_history.txt -i 
 ```
 
 In this case, the application will pass the additional information to the LLM, which can then suggest using custom loss functions or class weighting techniques to address the class imbalance.
-## Natural Language Interaction with the ADK Team
-
-In addition to the CLI and Streamlit web UI workflows, you can interact in natural language with the ADK team implemented in the `adk` folder. To get started, navigate to the `adk` directory and run:
-
-```bash
-cd adk
-adk web
-```
-
-This launches a web-based chat interface where you can communicate with the ADK team. Note that this workflow currently supports only OpenAI models, so you **must** set the `OPENAI_API_KEY` environment variable:
-
-```bash
-export OPENAI_API_KEY='your_openai_api_key_here'
-```
-
-Unlike the CLI and Streamlit UI, which support LLM models from any vendor, the ADK team integration only works with OpenAI models.
 
 ## License
 [MIT](LICENSE)
