@@ -101,13 +101,44 @@ cd adk
 adk web
 ```
 
-This launches a web-based chat interface where you can communicate with the ADK team. Note that this workflow currently supports only OpenAI models, so you **must** set the `OPENAI_API_KEY` environment variable:
+This launches a web-based chat interface where you can communicate with the ADK team.
+
+### Environment Variables
+
+The ADK Chat Interface requires API keys. You can configure them in **two ways**:
+
+#### Option 1: Create a `.env` file (recommended for local dev)
+
+In the project root, create a file named `.env` with the following content:
+
+```bash
+OPENAI_API_KEY=PASTE_YOUR_OPENAI_API_KEY_HERE
+GOOGLE_GENAI_USE_VERTEXAI=FALSE
+GOOGLE_API_KEY=PASTE_YOUR_GEMINI_API_KEY_HERE
+```
+
+> Note: If `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, ADK will attempt to use Vertex AI instead of the Gemini API.
+
+#### Option 2: Export variables in your shell (useful on servers)
 
 ```bash
 export OPENAI_API_KEY='your_openai_api_key_here'
+export GOOGLE_GENAI_USE_VERTEXAI=FALSE
+export GOOGLE_API_KEY='your_gemini_api_key_here'
 ```
 
-Unlike the CLI and Streamlit Web UI, which support LLM models from any vendor, the ADK Chat Interface only works with OpenAI models.
+On Windows (PowerShell):
+
+```powershell
+setx OPENAI_API_KEY "your_openai_api_key_here"
+setx GOOGLE_GENAI_USE_VERTEXAI "FALSE"
+setx GOOGLE_API_KEY "your_gemini_api_key_here"
+```
+
+---
+
+Unlike the CLI and Streamlit Web UI, which support LLMs from any vendor, the ADK Chat Interface currently only supports **OpenAI and Gemini models**. Therefore, you must set at least `OPENAI_API_KEY`. Gemini support is optional but recommended if you want to experiment with Google ADK agents.
+
 
 ## Streamlit Web UI
 
