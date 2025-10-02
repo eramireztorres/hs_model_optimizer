@@ -137,8 +137,7 @@ setx GOOGLE_API_KEY "your_gemini_api_key_here"
 
 ---
 
-Unlike the CLI and Streamlit Web UI, which support LLMs from any vendor, the ADK Chat Interface currently only supports **OpenAI and Gemini models**. Therefore, you must set at least `OPENAI_API_KEY`. Gemini support is optional but recommended if you want to experiment with Google ADK agents.
-
+Unlike the CLI and Streamlit Web UI, which support LLMs from any vendor, the ADK Chat Interface currently only supports **OpenAI models**. Setting GOOGLE_API_KEY is mandatory for ADK use and setting OPENAI_API_KEY is mandatory for agent use.
 
 ## Streamlit Web UI
 
