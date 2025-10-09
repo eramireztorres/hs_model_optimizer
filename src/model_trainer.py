@@ -1,20 +1,21 @@
 import sklearn
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.metrics import mean_squared_error, r2_score
-
-sklearn.set_config(enable_metadata_routing=True)
 from sklearn.model_selection import train_test_split
-# import xgboost as xgb
 import joblib
 from inspect import signature
+from metrics_calculator import MetricsCalculator, ClassificationMetricsCalculator
+
+sklearn.set_config(enable_metadata_routing=True)
+
 
 class ModelTrainer:
-    def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):
+    def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None,
+                 metrics_calculator: MetricsCalculator = None):
         self.model = model
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+        self.metrics_calculator = metrics_calculator or ClassificationMetricsCalculator()
 
 
     def train_model(self):
@@ -100,29 +101,12 @@ class ModelTrainer:
     def evaluate_model(self):
         """
         Evaluate the trained model on test data and return performance metrics.
-        Converts any non-JSON serializable types (e.g., NumPy arrays) to native Python types.
         """
         if self.model is None:
             raise ValueError("Model has not been trained.")
-        
-        # Get predictions
-        predictions = self.model.predict(self.X_test)
-        
-        # Convert metrics to Python-native types
-        metrics = {
-            "accuracy": float(accuracy_score(self.y_test, predictions)),
-            "precision": list(precision_score(self.y_test, predictions, average=None)),
-            "recall": list(recall_score(self.y_test, predictions, average=None)),
-            "f1_score": list(f1_score(self.y_test, predictions, average=None)),
-            "global_metrics": {
-                "accuracy": float(accuracy_score(self.y_test, predictions)),
-                "precision": float(precision_score(self.y_test, predictions, average='weighted')),
-                "recall": float(recall_score(self.y_test, predictions, average='weighted')),
-                "f1_score": float(f1_score(self.y_test, predictions, average='weighted'))
-            }
-        }
 
-        return metrics
+        predictions = self.model.predict(self.X_test)
+        return self.metrics_calculator.calculate(self.y_test, predictions)
 
     def save_model(self, filepath):
         """
@@ -158,12 +142,17 @@ class ModelTrainer:
             self._ensure_valid_class_weights(model.base_estimator, y)
 
 class RegressionModelTrainer:
-    def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None):
+    def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None,
+                 metrics_calculator: MetricsCalculator = None):
         self.model = model
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+
+        # Import here to avoid circular dependency
+        from metrics_calculator import RegressionMetricsCalculator
+        self.metrics_calculator = metrics_calculator or RegressionMetricsCalculator()
 
 
 
@@ -233,12 +222,9 @@ class RegressionModelTrainer:
         """
         if self.model is None:
             raise ValueError("Model has not been trained.")
+
         predictions = self.model.predict(self.X_test)
-        metrics = {
-            "mean_squared_error": mean_squared_error(self.y_test, predictions),
-            "r2_score": r2_score(self.y_test, predictions)
-        }
-        return metrics
+        return self.metrics_calculator.calculate(self.y_test, predictions)
 
     def save_model(self, filepath):
         """

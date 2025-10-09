@@ -4,34 +4,33 @@ import logging
 import sys
 sys.path.append(os.path.dirname(__file__))
 
+from model_code_repository import ModelCodeRepository
+
 dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
 dynamic_regression_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_regression_model.py')
 
 #%%
 
 class DynamicModelUpdater:
-    def __init__(self, dynamic_file_path=dynamic_file_path):
+    def __init__(self, dynamic_file_path=dynamic_file_path, repository: ModelCodeRepository = None):
         """
         Initialize the DynamicModelUpdater.
 
         Args:
             dynamic_file_path (str): The path to the Python file that will be dynamically updated.
+            repository (ModelCodeRepository): Repository for code persistence.
         """
         self.dynamic_file_path = dynamic_file_path
+        self.repository = repository or ModelCodeRepository(dynamic_file_path)
 
     def update_model_code(self, new_model_code):
         """
-        Update the `dynamic_model.py` file with the new model code provided by the LLM.
+        Update the dynamic model file with the new model code provided by the LLM.
 
         Args:
             new_model_code (str): The Python code for the new model and hyperparameters.
         """
-        try:
-            with open(self.dynamic_file_path, 'w') as f:
-                f.write(new_model_code)
-            logging.info(f"Updated model code in {self.dynamic_file_path}")
-        except Exception as e:
-            logging.error(f"Failed to update the dynamic model file: {e}")
+        self.repository.save(new_model_code)
 
     def run_dynamic_model(self):
         """
@@ -60,17 +59,13 @@ class DynamicModelUpdater:
             return None, str(e)  # Return both model and error message
     
 class DynamicRegressionModelUpdater:
-    def __init__(self, dynamic_file_path=dynamic_regression_file_path):
+    def __init__(self, dynamic_file_path=dynamic_regression_file_path, repository: ModelCodeRepository = None):
         self.dynamic_file_path = dynamic_file_path
         self.dynamic_directory = os.path.dirname(os.path.abspath(self.dynamic_file_path))
+        self.repository = repository or ModelCodeRepository(dynamic_file_path)
 
     def update_model_code(self, new_model_code):
-        try:
-            with open(self.dynamic_file_path, 'w') as f:
-                f.write(new_model_code)
-            logging.info(f"Updated regression model code in {self.dynamic_file_path}")
-        except Exception as e:
-            logging.error(f"Failed to update the regression model file: {e}")
+        self.repository.save(new_model_code)
 
     def run_dynamic_model(self):
         try:

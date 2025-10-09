@@ -36,8 +36,10 @@ except Exception:
 sys.path.append(os.path.dirname(__file__))
 
 from cli_decorator import cli_decorator
-from main_controller import MainController
+from main_controller_refactored import MainController
 from model_api_factory import ModelAPIFactory
+from config import OptimizerConfig
+from constants import MetricsSource
 
 #%%
 
@@ -104,34 +106,38 @@ def select_model_cli(data,
         ```
     """
     
-    error_prompt_path = os.path.join(os.path.dirname(__file__), 'prompts/error_correction_prompt.txt')
-    
+    # Build configuration object
     if metrics_source not in ['validation', 'test']:
         raise ValueError("metrics_source must be 'validation' or 'test'")
-    
+
     if not model_provider:
         model_provider = ModelAPIFactory.get_provider_from_model(model)
 
-    print(f"Using model: {model} (provider: {model_provider})")
-    print(f"Metrics source: {metrics_source}")
-    
     if is_regression is not None:
         is_regression = is_regression == 'true'
 
-    controller = MainController(
-        joblib_file_path=data,
-        model_provider=model_provider,
+    error_prompt_path = os.path.join(os.path.dirname(__file__), 'prompts/error_correction_prompt.txt')
+
+    config = OptimizerConfig(
+        data_path=data,
         model=model,
-        history_file_path=history_file_path,
-        extra_info=extra_info,
-        output_models_path=output_models_path,
-        metrics_source=metrics_source,
-        is_regression_bool=is_regression,
+        model_provider=model_provider,
         error_model=error_model,
-        error_prompt_path=error_prompt_path,
+        iterations=iterations,
+        is_regression=is_regression,
+        metrics_source=MetricsSource(metrics_source),
+        extra_info=extra_info,
+        history_file_path=history_file_path,
+        output_models_path=output_models_path,
         initial_model_path=initial_model_path,
+        error_prompt_path=error_prompt_path,
     )
-    controller.run(iterations=iterations)
+
+    print(f"Using model: {config.model} (provider: {config.model_provider})")
+    print(f"Metrics source: {config.metrics_source.value}")
+
+    controller = MainController(config)
+    controller.run()
 
 if __name__ == "__main__":
     select_model_cli()
