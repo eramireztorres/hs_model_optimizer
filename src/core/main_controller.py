@@ -6,14 +6,14 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from model_trainer import ModelTrainer, RegressionModelTrainer
-from llm_improver import LLMImprover,LLMRegressionImprover
-from model_history_manager import ModelHistoryManager
-from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
-from model_api_factory import ModelAPIFactory
-from data_loader import DataLoader  
-from llm_code_cleaner import LLMCodeCleaner
-from error_corrector import ErrorCorrector
+from models.model_trainer import ModelTrainer, RegressionModelTrainer
+from llm.llm_improver import LLMImprover,LLMRegressionImprover
+from persistence.model_history_manager import ModelHistoryManager
+from models.dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
+from llm.model_api_factory import ModelAPIFactory
+from data.data_loader import DataLoader  
+from llm.llm_code_cleaner import LLMCodeCleaner
+from llm.error_corrector import ErrorCorrector
 
 
 

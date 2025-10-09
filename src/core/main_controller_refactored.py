@@ -4,22 +4,26 @@ Refactored MainController with dependency injection and SOLID principles.
 import joblib
 import logging
 import os
+import sys
 
-from config import OptimizerConfig
-from data_loader import DataLoader
-from data_preparation_strategy import DataPreparationStrategyFactory
-from data_splitter import DataSplitter
-from model_trainer import ModelTrainer, RegressionModelTrainer
-from llm_improver import LLMImprover, LLMRegressionImprover
-from model_history_manager import ModelHistoryManager
-from dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
-from model_api_factory import ModelAPIFactory
-from llm_code_cleaner import LLMCodeCleaner
-from error_corrector import ErrorCorrector
-from error_handler import ErrorHandler
-from model_code_repository import ModelCodeRepository
-from iteration_executor import IterationExecutor
-from constants import TaskType
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from ..config import OptimizerConfig
+from ..constants import TaskType
+from ..data.data_loader import DataLoader
+from ..data.data_preparation_strategy import DataPreparationStrategyFactory
+from ..data.data_splitter import DataSplitter
+from ..models.model_trainer import ModelTrainer, RegressionModelTrainer
+from ..models.dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
+from ..llm.llm_improver import LLMImprover, LLMRegressionImprover
+from ..llm.model_api_factory import ModelAPIFactory
+from ..llm.llm_code_cleaner import LLMCodeCleaner
+from ..llm.error_corrector import ErrorCorrector
+from ..utils.error_handler import ErrorHandler
+from ..persistence.model_code_repository import ModelCodeRepository
+from ..persistence.model_history_manager import ModelHistoryManager
+from .iteration_executor import IterationExecutor
 
 
 def is_regression(y_train):

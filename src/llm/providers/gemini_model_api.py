@@ -1,5 +1,5 @@
 import os
-from base_model_api import BaseModelAPI
+from .base_model_api import BaseModelAPI
 from google import genai
 
 class GeminiModelAPI(BaseModelAPI):
@@ -48,7 +48,7 @@ class GeminiModelAPI(BaseModelAPI):
 # import os
 # import logging
 # import google.generativeai as genai
-# from base_model_api import BaseModelAPI
+# from llm.providers.base_model_api import BaseModelAPI
 
 # class GeminiModelAPI(BaseModelAPI):
 #     """

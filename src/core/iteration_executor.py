@@ -2,12 +2,18 @@
 Command pattern implementation for executing optimization iterations.
 """
 import logging
+import sys
+import os
 from typing import Optional, Tuple
-from config import ValidationSplit
-from llm_code_cleaner import LLMCodeCleaner
-from error_handler import ErrorHandler
-from model_trainer import ModelTrainer, RegressionModelTrainer
-from metrics_calculator import MetricsCalculatorFactory
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from ..config import ValidationSplit
+from ..llm.llm_code_cleaner import LLMCodeCleaner
+from ..utils.error_handler import ErrorHandler
+from ..models.model_trainer import ModelTrainer, RegressionModelTrainer
+from ..models.metrics_calculator import MetricsCalculatorFactory
 
 
 class IterationResult:

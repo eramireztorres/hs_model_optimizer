@@ -1,5 +1,5 @@
 from string import Template
-from base_model_api import BaseModelAPI
+from .providers.base_model_api import BaseModelAPI
 
 class ErrorCorrector:
     def __init__(self, llm_model: "BaseModelAPI", prompt_path: str):

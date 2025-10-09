@@ -9,7 +9,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,  # Ensure package data is included
     package_data={
-        '': ['prompts/*.txt'],  # Include all .txt files in prompts folder
+        'src': ['prompts/*.txt'],  # Include prompts at src level
+        'src.llm': ['prompts/*.txt'],  # Include prompts in llm module
     },
     install_requires=[
         # 'scikit-learn==1.5.2',  # Ensure compatibility with your codebase

@@ -1,6 +1,6 @@
 import logging
 import json
-from base_model_api import BaseModelAPI  # Ensure this import exists and points to the correct file.
+from .providers.base_model_api import BaseModelAPI  # Ensure this import exists and points to the correct file.
 
 import os
 import sys

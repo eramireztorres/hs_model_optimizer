@@ -2,7 +2,7 @@ import sklearn
 from sklearn.model_selection import train_test_split
 import joblib
 from inspect import signature
-from metrics_calculator import MetricsCalculator, ClassificationMetricsCalculator
+from .metrics_calculator import MetricsCalculator, ClassificationMetricsCalculator
 
 sklearn.set_config(enable_metadata_routing=True)
 
@@ -38,7 +38,7 @@ class ModelTrainer:
         self._ensure_valid_class_weights(self.model, y_train)
 
         # 2. Recursively disable verbosity on the model and any nested estimators or pipeline steps
-        from verbosity_suppressor import VerbositySuppressor
+        from .verbosity_suppressor import VerbositySuppressor
 
         VerbositySuppressor.suppress(self.model)
 
@@ -151,7 +151,7 @@ class RegressionModelTrainer:
         self.y_test = y_test
 
         # Import here to avoid circular dependency
-        from metrics_calculator import RegressionMetricsCalculator
+        from .metrics_calculator import RegressionMetricsCalculator
         self.metrics_calculator = metrics_calculator or RegressionMetricsCalculator()
 
 
@@ -165,6 +165,9 @@ class RegressionModelTrainer:
 
         X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
 
+        # Pre-configure CatBoost models with Huber loss to include delta parameter
+        self._configure_catboost_huber_delta(self.model)
+
         if hasattr(self.model, 'fit'):
             fit_params = {}
             # Use signature for robustness
@@ -175,27 +178,54 @@ class RegressionModelTrainer:
             try:
                 self.model.fit(X_train, y_train, **fit_params)
             except Exception as e:
-                if "Metric Huber requires delta as parameter" in str(e) or "unexpected argument(s) {'delta'}" in str(e):
-                    from sklearn.ensemble import VotingRegressor
-                    if isinstance(self.model, VotingRegressor):
-                        # Find the catboost estimator and add delta for it
-                        catboost_name = None
-                        for name, est in self.model.estimators:
-                            if 'CatBoostRegressor' in str(type(est)):
-                                catboost_name = name
-                                break
-                        if catboost_name:
-                            fit_params[f'{catboost_name}__delta'] = 1.0
-                            self.model.fit(X_train, y_train, **fit_params)
-                        else:
-                            raise e
-                    else:
-                        fit_params['delta'] = 1.0
-                        self.model.fit(X_train, y_train, **fit_params)
+                # If still failing due to delta, try adding it as fit parameter
+                if "Metric Huber requires delta as parameter" in str(e):
+                    fit_params['delta'] = 1.0
+                    self.model.fit(X_train, y_train, **fit_params)
                 else:
                     raise e
         else:
             raise ValueError("The provided model does not support the fit method.")
+
+    def _configure_catboost_huber_delta(self, model):
+        """
+        Recursively configure CatBoost models with Huber loss to include delta parameter.
+        This prevents fit() errors when using Huber loss.
+
+        CatBoost requires delta to be specified as part of the loss_function string:
+        e.g., 'Huber:delta=1.0' instead of just 'Huber'
+        """
+        try:
+            from catboost import CatBoostRegressor
+        except ImportError:
+            return
+
+        from sklearn.ensemble import VotingRegressor, StackingRegressor
+
+        # Handle VotingRegressor
+        if isinstance(model, VotingRegressor):
+            for name, estimator in model.estimators:
+                self._configure_catboost_huber_delta(estimator)
+
+        # Handle StackingRegressor
+        elif isinstance(model, StackingRegressor):
+            for estimator in model.estimators:
+                if isinstance(estimator, tuple):
+                    self._configure_catboost_huber_delta(estimator[1])
+                else:
+                    self._configure_catboost_huber_delta(estimator)
+            if model.final_estimator is not None:
+                self._configure_catboost_huber_delta(model.final_estimator)
+
+        # Handle CatBoostRegressor with Huber loss
+        elif isinstance(model, CatBoostRegressor):
+            loss_fn = model.get_params().get('loss_function', None)
+            if loss_fn:
+                loss_str = str(loss_fn)
+                # Check if it's Huber without delta specified
+                if loss_str == 'Huber' or (loss_str.startswith('Huber') and ':delta=' not in loss_str):
+                    # Add delta parameter to the loss function string
+                    model.set_params(loss_function='Huber:delta=1.0')
 
 
     # def train_model(self):

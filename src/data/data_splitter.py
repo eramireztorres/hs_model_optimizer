@@ -2,8 +2,8 @@
 Data splitting strategies for train/validation/test splits.
 """
 from sklearn.model_selection import train_test_split
-from config import ValidationSplit
-from constants import DEFAULT_TEST_SIZE, DEFAULT_RANDOM_STATE
+from ..config import ValidationSplit
+from ..constants import DEFAULT_TEST_SIZE, DEFAULT_RANDOM_STATE
 
 
 class DataSplitter:

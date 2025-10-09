@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+recursive-include src/prompts *.txt
+recursive-include src/llm/prompts *.txt
+recursive-include src *.py

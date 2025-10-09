@@ -4,7 +4,7 @@ import logging
 import sys
 sys.path.append(os.path.dirname(__file__))
 
-from model_code_repository import ModelCodeRepository
+from ..persistence.model_code_repository import ModelCodeRepository
 
 dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
 dynamic_regression_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_regression_model.py')
@@ -35,23 +35,30 @@ class DynamicModelUpdater:
     def run_dynamic_model(self):
         """
         Run the dynamically updated `load_model()` method from the `dynamic_model.py` file.
-        
+
         Returns:
             model: The model returned by the dynamically updated `load_model()` function.
         """
         try:
             # Invalidate cache and reload the module to pick up the latest changes
             module_name = os.path.splitext(os.path.basename(self.dynamic_file_path))[0]
+
+            # Remove from sys.modules if already loaded
             if module_name in sys.modules:
                 del sys.modules[module_name]
-            dynamic_module = importlib.import_module(module_name)
-            importlib.reload(dynamic_module)
-            
+
+            # Load module directly from file path to ensure we get the latest version
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(module_name, self.dynamic_file_path)
+            dynamic_module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = dynamic_module
+            spec.loader.exec_module(dynamic_module)
+
             # Execute the `load_model()` function and return the model
             model = dynamic_module.load_model()
             logging.info("Successfully loaded the dynamically updated model.")
             # return model
-        
+
             return model, None # (success case)
 
         except Exception as e:
@@ -69,21 +76,23 @@ class DynamicRegressionModelUpdater:
 
     def run_dynamic_model(self):
         try:
-            if self.dynamic_directory not in sys.path:
-                sys.path.append(self.dynamic_directory)
-
             module_name = os.path.splitext(os.path.basename(self.dynamic_file_path))[0]
 
+            # Remove from sys.modules if already loaded
             if module_name in sys.modules:
                 del sys.modules[module_name]
 
-            dynamic_module = importlib.import_module(module_name)
-            importlib.reload(dynamic_module)
+            # Load module directly from file path to ensure we get the latest version
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(module_name, self.dynamic_file_path)
+            dynamic_module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = dynamic_module
+            spec.loader.exec_module(dynamic_module)
 
             model = dynamic_module.load_model()
             logging.info("Successfully loaded the dynamically updated regression model.")
             # return model
-        
+
             return model, None # (success case)
 
         except Exception as e:

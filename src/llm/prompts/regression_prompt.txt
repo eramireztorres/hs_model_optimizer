@@ -1,0 +1,231 @@
+You have the following information:
+
+1. Current Model (Python code):
+<<<
+{current_model_code}
+>>>
+
+2. Regression Metrics for This Model:
+<<<
+{metrics_str}
+>>>
+
+3. Previous Regression Models and Their Performance Metrics:
+<<<
+{history_str}
+>>>
+
+4. Additional Information:
+<<<
+{extra_info}
+>>>
+
+**Important**:
+- Always propose at least one modification from any previous model. Never output the exact same code.
+- **If you have made 2–3 small hyperparameter changes to the same library (e.g., XGBoost) without improving the best known MSE or R², switch to a different algorithm (e.g., LightGBM, CatBoost) or propose an ensemble.**
+- If trying a new algorithm for 1–2 iterations fails to improve upon the best metrics, you may return to the best approach but **use a broader hyperparameter range or an ensemble**.
+- Avoid random micro-tweaks if they do not improve results.
+
+**Task**:
+Propose an improved regression model by:
+1. Changing or combining different model(s) if incremental tuning stalls,
+2. Refining hyperparameters if metrics are strong,
+3. Handling special conditions (outliers, noise) with alternative loss functions.
+
+**Output exactly one** function named `load_model` containing all imports. Do not provide explanations or extra code.
+
+---
+
+### **Examples**
+
+Below are shortened examples illustrating how the model might be changed or tuned under different scenarios. Each output is always one function named `load_model`, containing all imports and no extra text.
+
+---
+
+**Example 1 (Switching to a More Powerful Model)**
+
+Previous Model and Metrics:
+<<<
+Mean Squared Error: 250.75  
+R^2 Score: 0.85  
+Model Code:
+def load_model():
+    from sklearn.linear_model import LinearRegression
+    return LinearRegression()
+>>>
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor(n_estimators=100, max_depth=5, learning_rate=0.1)
+
+
+---
+
+**Example 2 (Outliers in the Data → Robust Loss)**
+
+Previous Model and Metrics:
+<<<
+Mean Squared Error: 200.5  
+R^2 Score: 0.90  
+Model Code:
+def load_model():
+    from sklearn.ensemble import RandomForestRegressor
+    return RandomForestRegressor(n_estimators=500, max_depth=50)
+>>>
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor( n_estimators=500, max_depth=10, learning_rate=0.05, objective='reg:squaredlogerror' )
+
+
+---
+
+**Example 3 (Heteroscedasticity in the Data → Alternative Loss Function)**
+
+Previous Model and Metrics:
+<<<
+Mean Squared Error: 180.0  
+R^2 Score: 0.92  
+Model Code:
+def load_model():
+    from sklearn.ensemble import RandomForestRegressor
+    return RandomForestRegressor(n_estimators=700, max_depth=60, min_samples_split=5)
+>>>
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor( n_estimators=600, max_depth=8, learning_rate=0.1, objective='reg:pseudohubererror' )
+
+
+---
+
+**Example 4 (Noisy Data → Increase Regularization)**
+
+Previous Model and Metrics:
+<<<
+Mean Squared Error: 300.0  
+R^2 Score: 0.80  
+Model Code:
+def load_model():
+    from sklearn.linear_model import Ridge
+    return Ridge(alpha=1.0)
+>>>
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor( n_estimators=800, max_depth=6, learning_rate=0.03, reg_lambda=10.0, reg_alpha=1.0 )
+
+
+---
+
+**Example 5 (Bias-Variance Tradeoff → Tune Model Complexity)**
+
+Previous Model and Metrics:
+<<<
+Mean Squared Error: 150.0  
+R^2 Score: 0.94  
+Model Code:
+def load_model():
+    from sklearn.ensemble import RandomForestRegressor
+    return RandomForestRegressor(n_estimators=600, max_depth=12, min_samples_split=4)
+>>>
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor( n_estimators=400, max_depth=6, learning_rate=0.1, subsample=0.7, colsample_bytree=0.7 )
+
+
+---
+
+**Example 6 (Using Model History to Determine the Best Approach)**
+
+Previous Model 1:
+def load_model(): 
+	from sklearn.linear_model import LinearRegression 
+	return LinearRegression()
+Metrics: MSE = 320.0, R^2 = 0.78
+
+Previous Model 2:
+def load_model(): 
+	from sklearn.ensemble import RandomForestRegressor 
+	return RandomForestRegressor(n_estimators=300, max_depth=20)
+
+Metrics: MSE = 260.0, R^2 = 0.85
+
+Previous Model 3:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor(n_estimators=500, max_depth=8, learning_rate=0.1, subsample=0.8)
+
+Metrics: MSE = 240.0, R^2 = 0.88
+
+Suggested Improvement:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor( n_estimators=700, max_depth=10, learning_rate=0.05, subsample=0.8, colsample_bytree=0.8, reg_alpha=1.0, reg_lambda=2.0 )
+
+
+---
+
+**Example 7 (LightGBM for Faster Training or Enhanced Performance)**
+
+Previous Model:
+def load_model(): 
+	from xgboost import XGBRegressor 
+	return XGBRegressor(n_estimators=500, max_depth=8, learning_rate=0.05)
+
+Metrics: MSE = 230.0, R^2 = 0.90
+
+Extra Info:
+The dataset is large. We want a fast yet strong alternative.
+
+Suggested Improvement:
+def load_model(): 
+	from lightgbm import LGBMRegressor 
+	return LGBMRegressor( n_estimators=600, max_depth=10, learning_rate=0.03, num_leaves=31, subsample=0.8, colsample_bytree=0.8 )
+
+**Example 8 (Stacking or Voting Ensemble)**
+
+Previous Models and Metrics:
+
+Model 1:
+def load_model():
+    from sklearn.linear_model import LinearRegression
+    return LinearRegression()
+Metrics: MSE = 320.0, R^2 = 0.78
+
+Model 2:
+def load_model():
+    from xgboost import XGBRegressor
+    return XGBRegressor(n_estimators=500, max_depth=8)
+Metrics: MSE = 240.0, R^2 = 0.88
+
+Model 3:
+def load_model():
+    from lightgbm import LGBMRegressor
+    return LGBMRegressor(n_estimators=400, max_depth=8)
+Metrics: MSE = 245.0, R^2 = 0.87
+
+Extra Info:
+We want to see if combining the two best models (XGB + LightGBM) might yield a better performance.
+
+Suggested Improvement:
+def load_model():
+    from sklearn.ensemble import VotingRegressor
+    from xgboost import XGBRegressor
+    from lightgbm import LGBMRegressor
+    xgb = XGBRegressor(n_estimators=500, max_depth=8)
+    lgbm = LGBMRegressor(n_estimators=400, max_depth=8)
+    model = VotingRegressor([('xgb', xgb), ('lgbm', lgbm)])
+    return model
+
+
+Use these examples as a guide for creating your own improvement. Always return only a single `load_model` function with all imports, no extra text, and no explanations.
+
+Suggested Improvement:
+

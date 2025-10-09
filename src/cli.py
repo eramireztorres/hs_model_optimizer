@@ -35,11 +35,11 @@ except Exception:
     pass
 sys.path.append(os.path.dirname(__file__))
 
-from cli_decorator import cli_decorator
-from main_controller_refactored import MainController
-from model_api_factory import ModelAPIFactory
-from config import OptimizerConfig
-from constants import MetricsSource
+from .utils.cli_decorator import cli_decorator
+from .core.main_controller_refactored import MainController
+from .llm.model_api_factory import ModelAPIFactory
+from .config import OptimizerConfig
+from .constants import MetricsSource
 
 #%%
 

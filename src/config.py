@@ -3,7 +3,7 @@ Configuration dataclasses for the optimizer.
 """
 from dataclasses import dataclass, field
 from typing import Optional
-from constants import (
+from .constants import (
     MetricsSource, TaskType,
     DEFAULT_ITERATIONS, DEFAULT_HISTORY_FILE, DEFAULT_MODEL,
     DEFAULT_EXTRA_INFO, DEFAULT_METRICS_SOURCE, DEFAULT_MAX_RETRIES
