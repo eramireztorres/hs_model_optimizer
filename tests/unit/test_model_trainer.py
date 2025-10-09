@@ -169,7 +169,7 @@ class TestRegressionModelTrainer:
         trainer.train_model()
 
         # Verify delta was added to loss_function
-        for name, est in trainer.model.estimators_:
+        for est in trainer.model.estimators_:
             if isinstance(est, CatBoostRegressor):
                 loss_fn = est.get_params().get('loss_function', '')
                 assert 'delta=' in str(loss_fn), "Delta parameter should be added to Huber loss"

@@ -57,7 +57,8 @@ class TestEndToEndClassification:
             model_provider='openai',
             iterations=2,
             metrics_source=MetricsSource.VALIDATION,
-            history_file_path=str(tmp_path / "history.joblib")
+            history_file_path=str(tmp_path / "history.joblib"),
+            error_prompt_path="src/prompts/error_correction_prompt.txt"
         )
 
         with patch('src.llm.model_api_factory.ModelAPIFactory.get_model_api') as mock_factory:
@@ -119,7 +120,8 @@ class TestEndToEndRegression:
             iterations=2,
             is_regression=True,
             metrics_source=MetricsSource.VALIDATION,
-            history_file_path=str(tmp_path / "history.joblib")
+            history_file_path=str(tmp_path / "history.joblib"),
+            error_prompt_path="src/prompts/error_correction_prompt.txt"
         )
 
         with patch('src.llm.model_api_factory.ModelAPIFactory.get_model_api') as mock_factory:
