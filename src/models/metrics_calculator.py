@@ -4,7 +4,7 @@ Metrics calculation service following Dependency Inversion Principle.
 from abc import ABC, abstractmethod
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    mean_squared_error, r2_score
+    mean_squared_error, r2_score, mean_absolute_error
 )
 
 
@@ -71,7 +71,8 @@ class RegressionMetricsCalculator(MetricsCalculator):
         """
         metrics = {
             "mean_squared_error": float(mean_squared_error(y_true, y_pred)),
-            "r2_score": float(r2_score(y_true, y_pred))
+            "r2_score": float(r2_score(y_true, y_pred)),
+            "mean_absolute_error": float(mean_absolute_error(y_true, y_pred))
         }
         return metrics
 
@@ -80,7 +81,7 @@ class MetricsCalculatorFactory:
     """Factory for creating metrics calculators."""
 
     @staticmethod
-    def create(is_regression: bool) -> MetricsCalculator:
+    def create(is_regression: bool = False) -> MetricsCalculator:
         """
         Create appropriate metrics calculator.
 
