@@ -47,6 +47,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
+      - name: Install OpenMP on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
