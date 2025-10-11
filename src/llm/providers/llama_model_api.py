@@ -2,6 +2,7 @@ import os
 import requests
 from .base_model_api import BaseModelAPI
 
+
 class LlamaModelAPI(BaseModelAPI):
     """
     Llama model API client.

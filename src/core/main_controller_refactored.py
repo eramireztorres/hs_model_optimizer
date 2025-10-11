@@ -10,11 +10,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ..config import OptimizerConfig
-from ..constants import TaskType
 from ..data.data_loader import DataLoader
 from ..data.data_preparation_strategy import DataPreparationStrategyFactory
 from ..data.data_splitter import DataSplitter
-from ..models.model_trainer import ModelTrainer, RegressionModelTrainer
 from ..models.dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 from ..llm.llm_improver import LLMImprover, LLMRegressionImprover
 from ..llm.model_api_factory import ModelAPIFactory
@@ -120,7 +118,7 @@ class MainController:
             with open(self.config.initial_model_path, 'r') as f:
                 init_code = f.read()
             updater = (DynamicRegressionModelUpdater() if self.config.is_regression
-                      else DynamicModelUpdater())
+                       else DynamicModelUpdater())
             updater.update_model_code(init_code)
         except Exception as e:
             print(f"Warning: could not load initial model from {self.config.initial_model_path}: {e}")

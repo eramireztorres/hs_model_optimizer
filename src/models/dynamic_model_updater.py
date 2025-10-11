@@ -1,4 +1,3 @@
-import importlib
 import os
 import logging
 import sys
@@ -9,7 +8,8 @@ from ..persistence.model_code_repository import ModelCodeRepository
 dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
 dynamic_regression_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_regression_model.py')
 
-#%%
+# %%
+
 
 class DynamicModelUpdater:
     def __init__(self, dynamic_file_path=dynamic_file_path, repository: ModelCodeRepository = None):
@@ -59,12 +59,13 @@ class DynamicModelUpdater:
             logging.info("Successfully loaded the dynamically updated model.")
             # return model
 
-            return model, None # (success case)
+            return model, None  # (success case)
 
         except Exception as e:
             logging.error(f"Failed to run dynamic model: {str(e)}")
             return None, str(e)  # Return both model and error message
-    
+
+
 class DynamicRegressionModelUpdater:
     def __init__(self, dynamic_file_path=dynamic_regression_file_path, repository: ModelCodeRepository = None):
         self.dynamic_file_path = dynamic_file_path
@@ -93,7 +94,7 @@ class DynamicRegressionModelUpdater:
             logging.info("Successfully loaded the dynamically updated regression model.")
             # return model
 
-            return model, None # (success case)
+            return model, None  # (success case)
 
         except Exception as e:
             logging.error(f"Failed to run dynamic regression model: {str(e)}")

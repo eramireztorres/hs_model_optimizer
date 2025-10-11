@@ -1,9 +1,6 @@
 """
 Unit tests for DynamicModelUpdater.
 """
-import pytest
-import sys
-from pathlib import Path
 from src.models.dynamic_model_updater import DynamicModelUpdater, DynamicRegressionModelUpdater
 
 

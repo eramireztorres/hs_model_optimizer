@@ -103,7 +103,3 @@ class LLMRegressionImprover(LLMImprover):
             prompt_file_path (str): Path to the regression prompt template file.
         """
         super().__init__(llm_model, model_history, prompt_file_path)
-
-
-
-

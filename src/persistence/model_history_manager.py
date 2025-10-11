@@ -3,6 +3,7 @@ import joblib
 import logging
 import json
 
+
 class ModelHistoryManager:
     def __init__(self, history_file_path='model_history.joblib'):
         """

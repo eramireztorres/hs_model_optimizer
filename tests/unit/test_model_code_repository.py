@@ -1,7 +1,6 @@
 """
 Unit tests for ModelCodeRepository.
 """
-import pytest
 from pathlib import Path
 from src.persistence.model_code_repository import ModelCodeRepository
 

@@ -1,7 +1,6 @@
 """
 Unit tests for constants module.
 """
-import pytest
 from src.constants import (
     MetricsSource, ModelProvider, TaskType,
     DEFAULT_ITERATIONS, DEFAULT_MODEL, DEFAULT_TEST_SIZE,

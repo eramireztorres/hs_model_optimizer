@@ -23,7 +23,6 @@ class MetricsCalculator(ABC):
         Returns:
             dict: Dictionary of metrics.
         """
-        pass
 
 
 class ClassificationMetricsCalculator(MetricsCalculator):

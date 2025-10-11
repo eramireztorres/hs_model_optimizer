@@ -3,9 +3,6 @@ import sys, os
 # ensure 'src/' is on PYTHONPATH for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-import pytest
-import numpy as np
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import StackingClassifier
 from sklearn.pipeline import Pipeline
 from lightgbm import LGBMClassifier
@@ -36,7 +33,7 @@ def test_lightgbm_suppressed():
 def test_stacking_with_boosters():
     base = [('x', XGBClassifier(verbosity=1)), ('l', LGBMClassifier(verbosity=1))]
     stack = StackingClassifier(estimators=base,
-                              final_estimator=LGBMClassifier(verbosity=1))
+                               final_estimator=LGBMClassifier(verbosity=1))
     VerbositySuppressor.suppress(stack)
     for _, est in stack.estimators:
         assert est.get_params()['verbosity'] in (-1, 0)

@@ -1,7 +1,6 @@
 """
 Unit tests for DataSplitter.
 """
-import pytest
 import numpy as np
 from src.data.data_splitter import DataSplitter
 from src.config import ValidationSplit

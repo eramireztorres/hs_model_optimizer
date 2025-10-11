@@ -2,9 +2,8 @@
 Unit tests for ModelTrainer classes.
 """
 import pytest
-import numpy as np
 from src.models.model_trainer import ModelTrainer, RegressionModelTrainer
-from src.models.metrics_calculator import ClassificationMetricsCalculator, RegressionMetricsCalculator
+from src.models.metrics_calculator import RegressionMetricsCalculator
 
 
 class TestModelTrainer:

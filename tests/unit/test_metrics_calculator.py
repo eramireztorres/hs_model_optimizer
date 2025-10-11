@@ -1,7 +1,6 @@
 """
 Unit tests for MetricsCalculator classes.
 """
-import pytest
 import numpy as np
 from src.models.metrics_calculator import (
     ClassificationMetricsCalculator,

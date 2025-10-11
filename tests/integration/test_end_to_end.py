@@ -4,7 +4,6 @@ Integration tests for end-to-end workflows.
 import pytest
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from unittest.mock import Mock, patch
 from src.config import OptimizerConfig
 from src.constants import MetricsSource

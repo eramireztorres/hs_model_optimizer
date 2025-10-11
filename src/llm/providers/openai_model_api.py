@@ -6,15 +6,17 @@ from openai._base_client import SyncHttpxClientWrapper
 
 _old_init = SyncHttpxClientWrapper.__init__
 
+
 def new_init(self, *args, **kwargs):
     kwargs.pop("proxies", None)
     return _old_init(self, *args, **kwargs)
 
+
 SyncHttpxClientWrapper.__init__ = new_init
 
 
-
 from .base_model_api import BaseModelAPI
+
 
 class OpenAIModelAPI(BaseModelAPI):
     """
@@ -92,6 +94,3 @@ class OpenAIModelAPI(BaseModelAPI):
         assistant_response = response.choices[0].message.content
         self.conversation_history.append({"role": "assistant", "content": assistant_response})
         return assistant_response.strip()
-
-
-

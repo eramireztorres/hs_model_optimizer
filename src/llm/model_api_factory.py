@@ -4,6 +4,7 @@ from .providers.gemini_model_api import GeminiModelAPI
 from .providers.anthropic_model_api import AnthropicModelAPI
 from ..constants import ModelProvider, MODEL_TO_PROVIDER
 
+
 class ModelAPIFactory:
     """
     Factory class to instantiate model API clients based on the provider name or model string.

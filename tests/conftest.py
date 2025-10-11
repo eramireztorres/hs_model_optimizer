@@ -2,12 +2,11 @@
 Pytest configuration and shared fixtures for hs_model_optimizer tests.
 """
 import sys
-import os
 from pathlib import Path
 import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 # Add project root to path so src can be imported as a package
 project_root = Path(__file__).parent.parent

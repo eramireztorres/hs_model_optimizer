@@ -1,5 +1,6 @@
 import abc
 
+
 class BaseModelAPI(abc.ABC):
     """
     Abstract base class for model APIs.
@@ -16,11 +17,9 @@ class BaseModelAPI(abc.ABC):
         """
         Retrieve the API key from environment variables.
         """
-        pass
 
     @abc.abstractmethod
     def get_response(self, prompt, **kwargs):
         """
         Get a response from the model based on the prompt.
         """
-        pass

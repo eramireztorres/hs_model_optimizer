@@ -17,7 +17,6 @@ class ModelTrainer:
         self.y_test = y_test
         self.metrics_calculator = metrics_calculator or ClassificationMetricsCalculator()
 
-
     def train_model(self):
         """
         Train the model on the provided training data, with optional
@@ -33,7 +32,7 @@ class ModelTrainer:
             test_size=0.2,
             random_state=42
         )
-        
+
         # Ensure CatBoost models do not fail due to mismatched class_weights
         self._ensure_valid_class_weights(self.model, y_train)
 
@@ -76,27 +75,25 @@ class ModelTrainer:
 
     #         self.model.fit(X_train, y_train, **fit_params)
     #     else:
-    #         raise ValueError("The provided model does not support the fit method.") 
-    
+    #         raise ValueError("The provided model does not support the fit method.")
+
     # def train_model(self):
     #     """
     #     Train the model on the provided training data, with optional validation data for early stopping if using XGBoost.
     #     """
     #     if self.model is None:
     #         raise ValueError("No model provided for training.")
-        
+
     #     # Optional: Split data for validation
     #     X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
-    
+
     #     # Check if the model is an XGBoost model
     #     if isinstance(self.model, xgb.XGBClassifier) or isinstance(self.model, xgb.XGBRegressor):
-    #         self.model.fit(X_train, y_train, 
+    #         self.model.fit(X_train, y_train,
     #                        eval_set=[(X_val, y_val)])
     #     else:
     #         # For other scikit-learn models
     #         self.model.fit(X_train, y_train)
-
-
 
     def evaluate_model(self):
         """
@@ -119,7 +116,6 @@ class ModelTrainer:
         Load a trained model from a joblib file.
         """
         self.model = joblib.load(filepath)
-        
 
     def _ensure_valid_class_weights(self, model, y):
         """Recursively adjust CatBoost class_weights if mismatched."""
@@ -141,6 +137,7 @@ class ModelTrainer:
         elif hasattr(model, 'base_estimator'):
             self._ensure_valid_class_weights(model.base_estimator, y)
 
+
 class RegressionModelTrainer:
     def __init__(self, model=None, X_train=None, y_train=None, X_test=None, y_test=None,
                  metrics_calculator: MetricsCalculator = None):
@@ -153,8 +150,6 @@ class RegressionModelTrainer:
         # Import here to avoid circular dependency
         from .metrics_calculator import RegressionMetricsCalculator
         self.metrics_calculator = metrics_calculator or RegressionMetricsCalculator()
-
-
 
     def train_model(self):
         """
@@ -227,20 +222,19 @@ class RegressionModelTrainer:
                     # Add delta parameter to the loss function string
                     model.set_params(loss_function='Huber:delta=1.0')
 
-
     # def train_model(self):
     #     """
     #     Train the model on the provided training data, with optional validation data for early stopping if using XGBoost.
     #     """
     #     if self.model is None:
     #         raise ValueError("No model provided for training.")
-        
+
     #     # Optional: Split data for validation
     #     X_train, X_val, y_train, y_val = train_test_split(self.X_train, self.y_train, test_size=0.2, random_state=42)
-    
+
     #     # Check if the model is an XGBoost model
     #     if isinstance(self.model, xgb.XGBClassifier) or isinstance(self.model, xgb.XGBRegressor):
-    #         self.model.fit(X_train, y_train, 
+    #         self.model.fit(X_train, y_train,
     #                        eval_set=[(X_val, y_val)])
     #     else:
     #         # For other scikit-learn models
@@ -267,4 +261,3 @@ class RegressionModelTrainer:
         Load a trained regression model from a joblib file.
         """
         self.model = joblib.load(filepath)
-

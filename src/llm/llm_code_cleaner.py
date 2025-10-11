@@ -134,8 +134,8 @@ class LLMCodeCleaner:
 #                 cleaned_lines.append(line)
 #                 # Check for a 'return' statement with the expected indentation level.
 #                 current_indent = len(line) - len(line.lstrip())
-#                 if (line.lstrip().startswith("return") and 
-#                     function_indent is not None and 
+#                 if (line.lstrip().startswith("return") and
+#                     function_indent is not None and
 #                     current_indent == function_indent + 4):
 #                     break
 

@@ -41,7 +41,8 @@ from .llm.model_api_factory import ModelAPIFactory
 from .config import OptimizerConfig
 from .constants import MetricsSource
 
-#%%
+# %%
+
 
 @cli_decorator
 def select_model_cli(data,
@@ -61,7 +62,7 @@ def select_model_cli(data,
         try:
             multiprocessing.set_start_method("spawn")
         except RuntimeError:
-            pass # start method can only be set once
+            pass  # start method can only be set once
 
     """
     Command-line interface for running the model optimization process.
@@ -105,7 +106,7 @@ def select_model_cli(data,
         hs_optimize --data path/to/your/data.csv --model gpt-4o-mini --iterations 5
         ```
     """
-    
+
     # Build configuration object
     if metrics_source not in ['validation', 'test']:
         raise ValueError("metrics_source must be 'validation' or 'test'")
@@ -139,7 +140,6 @@ def select_model_cli(data,
     controller = MainController(config)
     controller.run()
 
+
 if __name__ == "__main__":
     select_model_cli()
-
- 
