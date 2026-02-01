@@ -10,3 +10,4 @@ __pycache__/
 
 # Ignore virtual environments
 venv/
+prompts_claude.txt

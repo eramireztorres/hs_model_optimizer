@@ -9,11 +9,11 @@ from typing import Optional, Tuple
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ..config import ValidationSplit
-from ..llm.llm_code_cleaner import LLMCodeCleaner
-from ..utils.error_handler import ErrorHandler
-from ..models.model_trainer import ModelTrainer, RegressionModelTrainer
-from ..models.metrics_calculator import MetricsCalculatorFactory
+from src.config import ValidationSplit
+from src.llm.llm_code_cleaner import LLMCodeCleaner
+from src.utils.error_handler import ErrorHandler
+from src.models.model_trainer import ModelTrainer, RegressionModelTrainer
+from src.models.metrics_calculator import MetricsCalculatorFactory
 
 
 class IterationResult:

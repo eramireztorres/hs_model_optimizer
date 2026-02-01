@@ -3,7 +3,7 @@ import logging
 import sys
 sys.path.append(os.path.dirname(__file__))
 
-from ..persistence.model_code_repository import ModelCodeRepository
+from src.persistence.model_code_repository import ModelCodeRepository
 
 dynamic_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_model.py')
 dynamic_regression_file_path = os.path.join(os.path.dirname(__file__), 'dynamic_regression_model.py')

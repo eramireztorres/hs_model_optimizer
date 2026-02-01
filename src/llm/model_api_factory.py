@@ -2,7 +2,7 @@ from .providers.openai_model_api import OpenAIModelAPI
 from .providers.llama_model_api import LlamaModelAPI
 from .providers.gemini_model_api import GeminiModelAPI
 from .providers.anthropic_model_api import AnthropicModelAPI
-from ..constants import ModelProvider, MODEL_TO_PROVIDER
+from src.constants import ModelProvider, MODEL_TO_PROVIDER
 
 
 class ModelAPIFactory:

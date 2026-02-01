@@ -3,9 +3,9 @@ Strategy pattern for preparing data based on metrics source and split state.
 """
 from abc import ABC, abstractmethod
 import logging
-from ..config import ValidationSplit
+from src.config import ValidationSplit
 from .data_splitter import DataSplitter
-from ..constants import MetricsSource
+from src.constants import MetricsSource
 
 
 class DataPreparationStrategy(ABC):

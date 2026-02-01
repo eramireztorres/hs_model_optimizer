@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
 
-from verbosity_suppressor import VerbositySuppressor
+from src.models.verbosity_suppressor import VerbositySuppressor
 
 
 def test_single_sklearn_verbose_off():
